@@ -1,3 +1,8 @@
+# custom
+.ruff_cache/
+semgrep-junit.xml
+JUNIT-TEST.xml
+
 # Sphinx
 _build/
 
