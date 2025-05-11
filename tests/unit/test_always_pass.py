@@ -1,4 +1,4 @@
-from hello_world.__main__ import main
+from ingestion_framework.__main__ import main
 
 
 def test_always_pass1() -> None:

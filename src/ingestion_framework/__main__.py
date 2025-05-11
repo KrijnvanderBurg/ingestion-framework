@@ -25,8 +25,6 @@ def main(filepath: str) -> None:
         filepath (str): The path to a file.
     """
 
-    apple: str = 5  # intended error to show in Problems tab or vscode tasks.
-
     if filepath != "":
         print(filepath)
 
