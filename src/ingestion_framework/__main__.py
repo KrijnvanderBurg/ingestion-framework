@@ -12,7 +12,7 @@ main()
     Prints filepath argument to the console.
 """
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 
 
 def main(filepath: str) -> None:
@@ -32,6 +32,6 @@ def main(filepath: str) -> None:
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--filepath", required=True, type=str)
-    args = parser.parse_args()
+    args: Namespace = parser.parse_args()
 
     main(filepath=args.filepath)
