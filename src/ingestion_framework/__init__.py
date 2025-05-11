@@ -1,8 +1,16 @@
 """
-hello_world
-===========
+Ingestion Framework: A flexible ETL pipeline framework for data processing.
 
-A simple hello world module.
+This package provides a comprehensive framework for building data ingestion pipelines
+with Extract, Transform, and Load (ETL) operations. It supports multiple execution
+engines like PySpark, with a focus on flexibility and modularity.
+
+Key components:
+- extract: Components for extracting data from various sources
+- transforms: Components for applying transformations to extracted data
+- load: Components for loading processed data to target destinations
+- utils: Utility functions and classes used across the framework
+- types: Common type definitions for enhanced type safety
 """
 
 __author__ = "Krijn van der Burg"

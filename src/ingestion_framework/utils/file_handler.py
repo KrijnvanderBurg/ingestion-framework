@@ -1,5 +1,8 @@
 """
-FileHandler strategy.
+File handling utilities for the ingestion framework.
+
+This module provides classes and functions for handling various file operations
+and formats, including reading from and writing to different file types.
 """
 
 import json
@@ -12,21 +15,34 @@ import yaml
 
 
 class FileHandlerStrategy(ABC):
-    """Defines the interface for file handling strategies."""
+    """
+    Abstract base class for file handling strategies.
+
+    This class defines the interface that all concrete file handling strategies
+    must implement.
+
+    Attributes:
+        filepath (Path): The path to the file being handled.
+    """
 
     def __init__(self, filepath: str) -> None:
         """
-        Initialize the file handling strategy.
+        Initialize the file handling strategy with a file path.
 
         Args:
-            filepath (str): The path to the file.
+            filepath (str): The path to the file to be handled.
+
+        Examples:
+            >>> strategy = FileHandlerStrategy("path/to/file.json")
         """
         self.filepath: Path = Path(filepath)
 
     @abstractmethod
     def read(self) -> dict[str, Any]:
         """
-        Abstract method to read the file and return its contents as a dictionary.
+        Read the file and return its contents as a dictionary.
+
+        This method must be implemented by all concrete file handling strategies.
 
         Returns:
             dict[str, Any]: The contents of the file as a dictionary.
@@ -42,6 +58,7 @@ class FileHandlerStrategy(ABC):
         """
         Check if the file exists.
 
+        Returns:
             bool: True if the file exists, False otherwise.
         """
         return self.filepath.exists()
@@ -49,49 +66,77 @@ class FileHandlerStrategy(ABC):
 
 class FileHandler:
     """
-    Coordinates file handling strategies through implementations.
+    Main file handler class using the Strategy pattern.
 
-    Args:
-        strategy (FileHandlerStrategy): The strategy to be used for file handling.
+    This class delegates file operations to the appropriate strategy based on
+    the file format.
+
+    Attributes:
+        strategy (FileHandlerStrategy): The strategy used for handling the file.
     """
 
     def __init__(self, strategy: FileHandlerStrategy) -> None:
         """
-        Initialize FileHandler with a strategy.
+        Initialize FileHandler with a specific strategy.
 
         Args:
             strategy (FileHandlerStrategy): The strategy to be used for file handling.
+
+        Examples:
+            >>> json_strategy = FileJsonHandler("path/to/file.json")
+            >>> handler = FileHandler(json_strategy)
         """
         self.strategy: FileHandlerStrategy = strategy
 
     def set_strategy(self, strategy: FileHandlerStrategy) -> None:
         """
-        Set the file handling strategy.
+        Change the file handling strategy.
 
         Args:
-            strategy (FileHandlerStrategy): The strategy to be used for file handling.
+            strategy (FileHandlerStrategy): The new strategy to be used.
+
+        Examples:
+            >>> handler = FileHandler(json_strategy)
+            >>> yaml_strategy = FileYamlHandler("path/to/file.yaml")
+            >>> handler.set_strategy(yaml_strategy)
         """
         self.strategy = strategy
 
     def read(self) -> dict[str, Any]:
         """
-        Read the file using the set strategy and return its contents as a dictionary.
+        Read the file using the current strategy.
+
+        This method delegates the file reading operation to the current strategy.
 
         Returns:
             dict[str, Any]: The contents of the file as a dictionary.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            PermissionError: If permission is denied.
+            ValueError: If the file cannot be parsed.
+
+        Examples:
+            >>> handler = FileHandler(json_strategy)
+            >>> data = handler.read()
+            >>> print(data["some_key"])
         """
         return self.strategy.read()
 
     @staticmethod
     def is_json(s: str) -> bool:
         """
-        Checks if string is json.
+        Check if a string is valid JSON.
 
         Args:
-            s (str): The string.
+            s (str): The string to check.
 
         Returns:
-            bool: True if string is json, False otherwise.
+            bool: True if the string is valid JSON, False otherwise.
+
+        Examples:
+            >>> is_json = FileHandler.is_json('{"name": "John", "age": 30}')  # True
+            >>> is_json = FileHandler.is_json('Not a JSON string')  # False
         """
         try:
             json.loads(s=s)
@@ -99,30 +144,17 @@ class FileHandler:
         except json.JSONDecodeError:
             return False
 
-    # @staticmethod
-    # def is_yaml(schema: str) -> bool:
-    #     """
-    #     Checks if string is YAML.
-
-    #     Args:
-    #         schema (str): The string.
-
-    #     Returns:
-    #         bool: True if string is YAML, False otherwise.
-    #     """
-    #     try:
-    #         yaml.safe_load(stream=schema)
-    #         return True
-    #     except yaml.YAMLError:
-    #         return False
-
 
 class FileYamlHandler(FileHandlerStrategy):
-    """Handles YAML files."""
+    """
+    Strategy for handling YAML files.
+
+    This class implements the FileHandlerStrategy interface for YAML files.
+    """
 
     def __init__(self, filepath: str) -> None:
         """
-        Initialize the YAML file handler.
+        Initialize the YAML file handler with a file path.
 
         Args:
             filepath (str): The path to the YAML file.
@@ -131,7 +163,7 @@ class FileYamlHandler(FileHandlerStrategy):
 
     def read(self) -> dict[str, Any]:
         """
-        Read the YAML file and return its contents as a dictionary.
+        Read a YAML file and return its contents as a dictionary.
 
         Returns:
             dict[str, Any]: The contents of the YAML file as a dictionary.
@@ -139,7 +171,12 @@ class FileYamlHandler(FileHandlerStrategy):
         Raises:
             FileNotFoundError: If the file does not exist.
             PermissionError: If permission is denied for accessing the file.
-            yaml.YAMLError: If there is an error reading the YAML file.
+            yaml.YAMLError: If there is an error parsing the YAML file.
+
+        Examples:
+            >>> yaml_handler = FileYamlHandler("config.yaml")
+            >>> data = yaml_handler.read()
+            >>> print(data["configuration"]["setting"])
         """
         if not self._file_exists():
             raise FileNotFoundError(f"File '{self.filepath}' not found.")
@@ -156,11 +193,15 @@ class FileYamlHandler(FileHandlerStrategy):
 
 
 class FileJsonHandler(FileHandlerStrategy):
-    """Handles JSON files."""
+    """
+    Strategy for handling JSON files.
+
+    This class implements the FileHandlerStrategy interface for JSON files.
+    """
 
     def __init__(self, filepath: str) -> None:
         """
-        Initialize the JSON file handler.
+        Initialize the JSON file handler with a file path.
 
         Args:
             filepath (str): The path to the JSON file.
@@ -169,7 +210,7 @@ class FileJsonHandler(FileHandlerStrategy):
 
     def read(self) -> dict[str, Any]:
         """
-        Read the JSON file and return its contents as a dictionary.
+        Read a JSON file and return its contents as a dictionary.
 
         Returns:
             dict[str, Any]: The contents of the JSON file as a dictionary.
@@ -177,8 +218,12 @@ class FileJsonHandler(FileHandlerStrategy):
         Raises:
             FileNotFoundError: If the file does not exist.
             PermissionError: If permission is denied for accessing the file.
-            json.JSONDecodeError: If there is an error decoding the JSON file.
-            ValueError: If JSON cannot be decoded.
+            ValueError: If the JSON file cannot be parsed.
+
+        Examples:
+            >>> json_handler = FileJsonHandler("config.json")
+            >>> data = json_handler.read()
+            >>> print(data["configuration"]["setting"])
         """
         if not self._file_exists():
             raise FileNotFoundError(f"File '{self.filepath}' not found.")
@@ -196,7 +241,15 @@ class FileJsonHandler(FileHandlerStrategy):
 
 
 class FileHandlerContext:
-    """Manages file handling contexts."""
+    """
+    Context class for managing file handler strategies.
+
+    This class provides factory methods to create the appropriate file handler
+    strategy based on file extension.
+
+    Attributes:
+        SUPPORTED_EXTENSIONS (dict): Dictionary mapping file extensions to handler classes.
+    """
 
     SUPPORTED_EXTENSIONS: dict[str, Any] = {
         ".yml": FileYamlHandler,
@@ -217,6 +270,10 @@ class FileHandlerContext:
 
         Raises:
             NotImplementedError: If the file extension is not supported.
+
+        Examples:
+            >>> strategy = FileHandlerContext.get_strategy("config.json")  # Returns FileJsonHandler
+            >>> strategy = FileHandlerContext.get_strategy("config.yaml")  # Returns FileYamlHandler
         """
         _, file_extension = os.path.splitext(filepath)
         strategy_class = FileHandlerContext.SUPPORTED_EXTENSIONS.get(file_extension)
@@ -228,13 +285,23 @@ class FileHandlerContext:
     @classmethod
     def factory(cls, filepath: str) -> FileHandler:
         """
-        Get a file handler with the appropriate strategy based on the file extension.
+        Create a FileHandler with the appropriate strategy based on the file extension.
+
+        This factory method selects and instantiates the appropriate strategy based on
+        the file extension and returns a FileHandler configured with that strategy.
 
         Args:
             filepath (str): The path to the file.
 
         Returns:
-            FileHandler: An instance of FileHandler with the appropriate strategy set.
+            FileHandler: A FileHandler instance with the appropriate strategy.
+
+        Raises:
+            NotImplementedError: If the file extension is not supported.
+
+        Examples:
+            >>> handler = FileHandlerContext.factory("config.json")
+            >>> data = handler.read()
         """
         strategy_class = cls.get_strategy(filepath=filepath)
         strategy_instance = strategy_class  # Instantiate the strategy class

@@ -1,5 +1,10 @@
 """
-TODO"""
+PySpark file-based data loading implementation.
+
+This module provides concrete implementations for loading data to file-based destinations
+using PySpark. It supports various file formats such as Parquet, JSON, and CSV, in both
+batch and streaming modes.
+"""
 
 from abc import ABC
 from typing import Generic
@@ -21,7 +26,14 @@ class LoadFileAbstract(
 
 class LoadFilePyspark(LoadFileAbstract[LoadModelFilePyspark, DataFramePyspark, StreamingQueryPyspark], LoadPyspark):
     """
-    Concrete class for file loadion using PySpark DataFrame.
+    Concrete implementation for file-based data loading using PySpark.
+
+    This class provides the implementation for writing data to file-based destinations
+    using PySpark DataFrameWriter and DataStreamWriter APIs. It supports both batch
+    and streaming write operations with various file formats.
+
+    Attributes:
+        load_model_concrete: The concrete model class used for configuration.
     """
 
     load_model_concrete = LoadModelFilePyspark

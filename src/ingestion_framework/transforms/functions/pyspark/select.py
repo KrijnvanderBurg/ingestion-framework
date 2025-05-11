@@ -1,12 +1,8 @@
 """
-Column transform function.
+PySpark select transformation implementation.
 
-
-========================================================================================
-PrimePythonPrinciples © 2024 by Krijn van der Burg is licensed under CC BY-SA 4.0
-
-For inquiries contact Krijn van der Burg at https://www.linkedin.com/in/krijnvanderburg/
-========================================================================================
+This module provides a PySpark implementation of the select transformation function,
+which allows selecting specific columns from DataFrames with various selection options.
 """
 
 from abc import ABC
@@ -31,36 +27,76 @@ COLUMNS: Final[str] = "columns"
 
 
 class SelectFunctionModelAbstract(FunctionModelAbstract[ArgsT], ABC):
-    """An abstract base class for DataFrame Select functions."""
+    """
+    Abstract base class for DataFrame Select function models.
+
+    This class represents the configuration for column selection transformations.
+    """
 
     class Args(ArgsAbstract, ABC):
-        """An abstract base class for arguments of Select functions."""
+        """
+        Abstract base class for arguments of Select functions.
+
+        This class defines the interface for arguments used by select transformation functions.
+        """
 
 
 class SelectFunctionModelPysparkArgs(SelectFunctionModelAbstract.Args):
-    """The arguments for PySpark DataFrame Select functions."""
+    """
+    Arguments for PySpark DataFrame Select functions.
+
+    This class implements the Args interface for PySpark select transformations.
+
+    Attributes:
+        columns (list[Column]): The list of columns to select.
+    """
 
     def __init__(self, columns: list[Column]) -> None:
+        """
+        Initialize arguments for a select transformation.
+
+        Args:
+            columns (list[Column]): The list of columns to select.
+        """
         self.columns = columns
 
     @property
     def columns(self) -> list[Column]:
+        """
+        Get the list of columns to select.
+
+        Returns:
+            list[Column]: The list of columns.
+        """
         return self._columns
 
     @columns.setter
     def columns(self, value: list[Column]) -> None:
+        """
+        Set the list of columns to select.
+
+        Args:
+            value (list[Column]): The list of columns to set.
+        """
         self._columns = value
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        Create Args object from a JSON dictionary.
+        Create Args object from a configuration dictionary.
 
         Args:
-            confeti (dict[str, Any]): The JSON dictionary.
+            confeti (dict[str, Any]): The configuration dictionary.
 
         Returns:
-            SelectFunctionModelPyspark.Args: The Args object created from the JSON dictionary.
+            SelectFunctionModelPysparkArgs: The Args object created from the configuration.
+
+        Raises:
+            DictKeyError: If a required key is missing from the configuration.
+
+        Examples:
+            >>> confeti = {"columns": ["name", "age", "address"]}
+            >>> args = SelectFunctionModelPysparkArgs.from_confeti(confeti)
         """
         try:
             columns = []
@@ -73,72 +109,73 @@ class SelectFunctionModelPysparkArgs(SelectFunctionModelAbstract.Args):
 
 
 class SelectFunctionModelPyspark(SelectFunctionModelAbstract[SelectFunctionModelPysparkArgs]):
-    """A concrete implementation of DataFrame Select functions using PySpark."""
+    """
+    PySpark-specific implementation of Select function model.
+
+    This class implements the SelectFunctionModelAbstract for PySpark DataFrames.
+    """
 
     args_concrete = SelectFunctionModelPysparkArgs
 
 
 class SelectFunctionAbstract(FunctionAbstract[FunctionModelT], ABC):
     """
-    Encapsulates column transformation logic for PySpark DataFrames.
+    Abstract base class for Select transformation functions.
 
-    Attributes:
-        model (...): The SelectModel object containing the Selecting information.
-
-    Methods:
-        from_confeti(confeti: dict[str, Any]) -> Self: Create SelectTransform object from json.
-        transform() -> Callable: Selects column(s) to new type.
+    This class represents a transformation function for selecting columns from a DataFrame.
     """
 
 
 class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], FunctionPyspark):
     """
-    Encapsulates column transformation logic for PySpark DataFrames.
+    PySpark-specific implementation of Select transformation function.
+
+    This class implements the SelectFunctionAbstract for PySpark DataFrames, providing
+    functionality to select specific columns.
 
     Attributes:
-        model (...): The SelectModel object containing the Selecting information.
-
-    Methods:
-        from_confeti(confeti: dict[str, Any]) -> Self: Create SelectTransform object from json.
-        transform() -> Callable: Selects column(s) to new type.
+        model (SelectFunctionModelPyspark): The Select function model.
     """
 
     model_concrete = SelectFunctionModelPyspark
 
     def transform(self) -> Callable:
         """
-        Selects columns with aliases.
-
-        Args:
-            columns (Ordereddict[str, Any]): Ordered mapping of column names to aliases.
+        Create a callable that selects columns from a DataFrame.
 
         Returns:
-            (Callable): Function for `DataFrame.transform()`.
+            Callable: A function that selects columns from the DataFrame in the registry.
 
         Examples:
             Consider the following DataFrame schema:
+            ```
+            root
+            |-- name: string (nullable = true)
+            |-- age: integer (nullable = true)
+            |-- address: string (nullable = true)
+            ```
 
+            Applying the select function with columns ["name", "age"]:
+            ```
+            {"function": "select", "arguments": {"columns": ["name", "age"]}}
+            ```
+
+            The resulting DataFrame schema will be:
             ```
             root
             |-- name: string (nullable = true)
             |-- age: integer (nullable = true)
             ```
-
-            Applying the confeti 'select_with_alias' function:
-
-            ```
-            {"function": "select_with_alias", "arguments": {"columns": {"age": "years_old",}}}
-            ```
-
-            The resulting DataFrame schema will be:
-
-            ```
-            root
-            |-- years_old: integer (nullable = true)
-            ```
         """
 
         def f(dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
+            """
+            Select columns from the DataFrame in the registry.
+
+            Args:
+                dataframe_registry (RegistrySingleton): The registry containing DataFrames.
+                dataframe_name (str): The name of the DataFrame in the registry.
+            """
             dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(
                 *self.model.arguments.columns
             )

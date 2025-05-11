@@ -1,5 +1,9 @@
 """
-TODO
+Base classes for data loading operations.
+
+This module provides abstract and concrete base classes for defining data
+loading operations in the ingestion framework. It implements interfaces and models
+for loading data to various destinations with different formats and execution modes.
 """
 
 import json
@@ -170,6 +174,12 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
     @property
     def schema_location(self) -> str | None:
+        """
+        Get the schema location.
+
+        Returns:
+            str | None: The schema location or None if no schema location is set.
+        """
         return self._schema_location
 
     @schema_location.setter
@@ -178,6 +188,13 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
     @property
     def options(self) -> dict[str, str]:
+        """
+        Method to retrieve the options dictionary.
+
+        Returns:
+            dict[str, str]: A dictionary containing options for the loader,
+                            where keys are option names and values are option values as strings.
+        """
         return self._options
 
     @options.setter
@@ -190,11 +207,22 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
 
 class LoadModelFileAbstract(LoadModelAbstract):
-    """TODO"""
+    """
+    Abstract model class for file-based data loading.
+
+    This class defines the interface for models that represent file-based data loading
+    configurations, extending the base load model with file-specific properties.
+    """
 
 
 class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
-    """TODO"""
+    """
+    PySpark-specific implementation of file-based load model.
+
+    This class provides a concrete implementation of the file-based load model
+    for PySpark, handling configuration details for writing data to file-based
+    destinations using PySpark's DataFrame writer.
+    """
 
     def __init__(
         self,
@@ -233,6 +261,12 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
 
     @property
     def mode(self) -> LoadMode:
+        """
+        Get the current load mode.
+
+        Returns:
+            LoadMode: The mode used for loading data.
+        """
         return self._mode
 
     @mode.setter
@@ -241,6 +275,13 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
 
     @property
     def data_format(self) -> LoadFormat:
+        """
+        Get the data format that this loader uses.
+
+        Returns:
+            LoadFormat: The format used by this loader, which specifies how data should be formatted
+            for loading.
+        """
         return self._data_format
 
     @data_format.setter
@@ -269,7 +310,7 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
             schema_location = confeti.get(SCHEMA_LOCATION, None)
             options = confeti.get(OPTIONS, {})
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(
             name=name,

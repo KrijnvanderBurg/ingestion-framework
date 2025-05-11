@@ -1,14 +1,9 @@
 """
-This module provides core types and utility classes for the ingestion framework.
+Common type definitions for the ingestion framework.
 
-Type Variables:
-    DataFrameT (TypeVar): A type variable bound to pyspark.sql.DataFrame
-    StreamingQueryT (TypeVar): A type variable bound to pyspark.sql.streaming.query.StreamingQuery
-
-Classes:
-    SingletonType: A metaclass for implementing the Singleton pattern
-    Registry: A class for tracking and managing arbitrary objects
-    RegistrySingleton: A registry class that implements the Singleton pattern
+This module provides type aliases, registry implementations, and other type-related
+constructs used throughout the ingestion framework to enhance type safety and enable
+consistent data sharing between components.
 """
 
 import threading

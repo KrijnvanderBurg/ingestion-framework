@@ -1,21 +1,9 @@
 """
-This module provides the base job classes for ETL (Extract, Transform, Load) operations.
+Job orchestration and execution for the ingestion framework.
 
-The module defines abstract and concrete job classes that handle the ETL process
-using different engines (currently supporting PySpark). The job classes coordinate
-the execution of extract, transform, and load operations based on configuration.
-
-Classes:
-    Engine: Enumeration of supported job execution engines
-    JobAbstract: Abstract base class for ETL jobs with generic typing
-    JobPyspark: Concrete implementation of JobAbstract for PySpark engine
-    Job: Factory class to create job instances from configuration files
-
-Constants:
-    ENGINE: Configuration key for specifying the job engine
-    EXTRACTS: Configuration key for extract operations
-    TRANSFORMS: Configuration key for transform operations
-    LOADS: Configuration key for load operations
+This module provides classes and functions for defining, configuring, and executing
+data ingestion jobs that coordinate extraction, transformation, and loading operations
+within the ingestion framework.
 """
 
 from abc import ABC, abstractmethod
@@ -152,12 +140,15 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self._extracts = value
 
     @property
-    def transforms(self) -> list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
+    def transforms(
+        self,
+    ) -> list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
         """
         Get the list of transform configurations.
 
         Returns:
-            list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]: The list of transform configurations.
+            list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
+                The list of transform configurations.
         """
         return self._transforms
 
@@ -257,7 +248,26 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
 class JobPyspark(JobAbstract):
     """
-    TODO
+    PySpark implementation of the ETL job.
+
+    This class provides a concrete implementation of the JobAbstract class for
+    PySpark-based data processing. It sets up appropriate context classes for
+    extraction, transformation, and loading operations in a PySpark environment.
+
+    Attributes:
+        extract_concrete: The PySpark-specific extraction context class.
+        transform_concrete: The PySpark-specific transformation class.
+        load_concrete: The PySpark-specific loading context class.
+
+    Examples:
+        >>> job_config = {
+        >>>     "engine": "pyspark",
+        >>>     "extracts": [...],
+        >>>     "transforms": [...],
+        >>>     "loads": [...]
+        >>> }
+        >>> job = JobPyspark.from_confeti(job_config)
+        >>> job.execute()
     """
 
     extract_concrete = ExtractContextPyspark

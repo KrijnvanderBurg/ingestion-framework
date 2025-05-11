@@ -1,10 +1,9 @@
-"""Exceptions module for the ingestion framework.
+"""
+Custom exceptions for the ingestion framework.
 
-This module contains custom exceptions for the ingestion framework.
-
-Classes
--------
-DictKeyError
+This module defines exception classes used throughout the ingestion framework
+to provide detailed error information and appropriate error handling for various
+failure scenarios.
 """
 
 
@@ -16,21 +15,19 @@ class DictKeyError(KeyError):
     informative error messages that include the missing key and all
     available keys in the dictionary.
 
-    Parameters
-    ----------
-    key : Any
-        The key that was not found in the dictionary
-    dict_ : dict
-        The dictionary in which the key was not found
+    Args:
+        key : Any
+            The key that was not found in the dictionary
+        dict_ : dict
+            The dictionary in which the key was not found
 
-    Examples
-    --------
-    >>> d = {"a": 1, "b": 2}
-    >>> try:
-    ...     d["c"]
-    ... except KeyError as e:
-    ...     raise DictKeyError("c", d) from e
-    DictKeyError: Could not find key 'c', available keys: ['a', 'b']
+    Examples:
+        >>> d = {"a": 1, "b": 2}
+        >>> try:
+        ...     d["c"]
+        ... except KeyError as e:
+        ...     raise DictKeyError("c", d) from e
+        DictKeyError: Could not find key 'c', available keys: ['a', 'b']
     """
 
     def __init__(self, key, dict_) -> None:

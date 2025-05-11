@@ -1,28 +1,38 @@
 """
-Logger Implementation.
+Logging utilities for the ingestion framework.
 
-This module provides functionality for configuring and obtaining logger instances.
+This module provides functions for setting up and configuring logging
+across the ingestion framework, ensuring consistent log formatting and handling.
 """
 
 import logging
 from logging.handlers import RotatingFileHandler
 from sys import stdout
 
-# Log format
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 
 
 def set_logger(name: str, filename: str = "ingestion.log", level: int = logging.INFO) -> logging.Logger:
     """
-    Configure the logging settings.
+    Configure a logger instance with file and console handlers.
+
+    This function creates or retrieves a logger with the given name and configures it
+    with a rotating file handler and a console handler, using the predefined formatter.
 
     Args:
         name (str): Logger name.
-        filename (str): Name of the log file, defaults to "ingestion.log" (optional).
-        level (enum): Logging level (default is INFO).
+        filename (str): Name of the log file. Defaults to "ingestion.log".
+        level (int): Logging level. Defaults to logging.INFO.
 
     Returns:
         logging.Logger: Configured logger instance.
+
+    Examples:
+        >>> logger = set_logger("my_module")
+        >>> logger.info("This is an info message")
+        >>>
+        >>> # With custom log file and level
+        >>> logger = set_logger("debug_module", filename="debug.log", level=logging.DEBUG)
     """
     logger = logging.getLogger(name)
 
@@ -47,12 +57,24 @@ def set_logger(name: str, filename: str = "ingestion.log", level: int = logging.
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get logger instance by name.
+    Get an existing logger instance by name.
+
+    This function retrieves an existing logger instance by name without
+    adding additional handlers, assuming that the logger has already been
+    configured using set_logger().
 
     Args:
-        name (str): Name of the logger.
+        name (str): Name of the logger to retrieve.
 
     Returns:
-        logging.Logger: Logger instance.
+        logging.Logger: Logger instance with the given name.
+
+    Examples:
+        >>> # First configure the logger
+        >>> _ = set_logger("my_module")
+        >>>
+        >>> # Later in another module, retrieve the same logger
+        >>> logger = get_logger("my_module")
+        >>> logger.info("Using the same logger instance")
     """
     return logging.getLogger(name)

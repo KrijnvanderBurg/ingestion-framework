@@ -1,5 +1,8 @@
 """
-Module to take care of creating a singleton of the execution environment class.
+Schema handling utilities for the ingestion framework.
+
+This module provides classes and functions for handling data schemas across
+different processing engines, including schema parsing, validation and conversion.
 """
 
 import json
@@ -19,33 +22,84 @@ SchemaT = TypeVar("SchemaT", bound=StructType)
 
 
 class SchemaHandlerAbstract(Generic[SchemaT], ABC):
-    @staticmethod
-    @abstractmethod
-    def schema_factory(schema: str) -> SchemaT: ...
+    """
+    Abstract base class for schema handling functionality.
+
+    This class defines the interface for schema handlers, which are responsible
+    for creating schemas from various sources.
+    """
 
     @staticmethod
     @abstractmethod
-    def from_json(schema: str) -> SchemaT: ...
+    def schema_factory(schema: str) -> SchemaT:
+        """
+        Create a schema instance from a schema specification.
+
+        Args:
+            schema (str): The schema specification, which could be a JSON string or file path.
+
+        Returns:
+            SchemaT: A schema instance of the appropriate type.
+        """
 
     @staticmethod
     @abstractmethod
-    def from_file(filepath: str) -> SchemaT: ...
+    def from_json(schema: str) -> SchemaT:
+        """
+        Create a schema instance from a JSON string.
+
+        Args:
+            schema (str): The JSON string containing the schema definition.
+
+        Returns:
+            SchemaT: A schema instance of the appropriate type.
+        """
+
+    @staticmethod
+    @abstractmethod
+    def from_file(filepath: str) -> SchemaT:
+        """
+        Create a schema instance from a file.
+
+        Args:
+            filepath (str): The path to the file containing the schema definition.
+
+        Returns:
+            SchemaT: A schema instance of the appropriate type.
+        """
 
 
 class SchemaHandlerPyspark(SchemaHandlerAbstract):
+    """
+    Implementation of schema handler for PySpark's StructType.
+
+    This class provides methods to create PySpark StructType schemas from various
+    sources like JSON strings and files.
+    """
+
     @staticmethod
     def schema_factory(schema: str) -> StructType | None:
         """
-        Get the appropriate schema handler based on the schema.
+        Get the appropriate schema handler based on the schema specification.
+
+        This method determines the correct way to parse a schema based on the format
+        of the schema string (file path or JSON).
 
         Args:
-            schema (str): The schema attribute string.
+            schema (str): The schema specification, which could be a JSON string or file path.
 
         Returns:
-            StructType: The schema handler object.
+            StructType | None: The schema instance, or None if an empty string is provided.
 
         Raises:
             NotImplementedError: If the schema value is not recognized or not supported.
+
+        Examples:
+            >>> schema = '{"fields":[{"name":"name","type":"string"},{"name":"age","type":"integer"}]}'
+            >>> schema_handler = SchemaHandlerPyspark.schema_factory(schema)
+            >>>
+            >>> # From a file
+            >>> schema_handler = SchemaHandlerPyspark.schema_factory("/path/to/schema.json")
         """
         if schema == "":
             return None
@@ -66,16 +120,26 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
     @staticmethod
     def from_dict(schema: dict[str, Any]) -> StructType:
         """
-        Read JSON schema string.
+        Create a StructType schema from a dictionary.
 
         Args:
-            schema (str): schema json.
+            schema (dict[str, Any]): The dictionary representing the schema.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema created from the dictionary.
 
         Raises:
-            ValueError: If there's an error decoding the JSON schema.
+            ValueError: If there's an error converting the dictionary to a schema.
+
+        Examples:
+            >>> schema_dict = {
+            >>>     "fields": [
+            >>>         {"name": "name", "type": "string", "nullable": True},
+            >>>         {"name": "age", "type": "integer", "nullable": True}
+            >>>     ],
+            >>>     "type": "struct"
+            >>> }
+            >>> schema = SchemaHandlerPyspark.from_dict(schema_dict)
         """
         try:
             return StructType.fromJson(json=schema)
@@ -86,16 +150,28 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
     @staticmethod
     def from_json(schema: str) -> StructType:
         """
-        Read JSON schema string.
+        Create a StructType schema from a JSON string.
 
         Args:
-            schema (str): schema json.
+            schema (str): The JSON string representing the schema.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema created from the JSON string.
 
         Raises:
             ValueError: If there's an error decoding the JSON schema.
+
+        Examples:
+            >>> json_schema = '''
+            >>> {
+            >>>     "fields": [
+            >>>         {"name": "name", "type": "string", "nullable": true},
+            >>>         {"name": "age", "type": "integer", "nullable": true}
+            >>>     ],
+            >>>     "type": "struct"
+            >>> }
+            >>> '''
+            >>> schema = SchemaHandlerPyspark.from_json(json_schema)
         """
         try:
             json_content = json.loads(s=schema)
@@ -107,20 +183,22 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
     @staticmethod
     def from_file(filepath: str) -> StructType:
         """
-        Read JSON schema file.
+        Create a StructType schema from a file.
 
         Args:
-            filepath (str): path to schema file.
+            filepath (str): Path to the schema file.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema created from the file.
 
         Raises:
             FileNotFoundError: If the schema file is not found.
             PermissionError: If permission is denied for accessing the schema file.
             ValueError: If there's an error decoding the JSON schema.
-        """
 
+        Examples:
+            >>> schema = SchemaHandlerPyspark.from_file("/path/to/schema.json")
+        """
         file_handler: FileHandler = FileHandlerContext.factory(filepath=filepath)
         file_content = file_handler.read()
         schema = SchemaHandlerPyspark.from_dict(schema=file_content)
