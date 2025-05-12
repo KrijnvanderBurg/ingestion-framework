@@ -19,7 +19,7 @@
             "name": "transform-test",
             "upstream_name": "extract-test",
             "recipes": [
-                { "recipe": "select_columns", "arguments": { "columns": ["name", "age"] } }
+                { "recipe": "calculate_birth_year", "arguments": { "age_column": "age", "reference_year": 2025 } }
             ]
         }
     ],

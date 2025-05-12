@@ -19,11 +19,11 @@ from ingestion_framework.extract.factory import ExtractContextAbstract, ExtractC
 from ingestion_framework.load.base import LoadAbstract, LoadModelAbstract
 from ingestion_framework.load.factory import LoadContextAbstract, LoadContextPyspark
 from ingestion_framework.transforms.base import (
-    FunctionAbstract,
     TransformAbstract,
     TransformModelAbstract,
     TransformPyspark,
 )
+from ingestion_framework.transforms.recipes.base import RecipeAbstract
 from ingestion_framework.types import DataFrameT, StreamingQueryT
 from ingestion_framework.utils.file_handler import FileHandlerContext
 
@@ -76,7 +76,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self,
         engine: Engine,
         extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]],
-        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
+        transforms: list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]],
         loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]],
     ) -> None:
         """
@@ -94,7 +94,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
             A list of extract operations to retrieve data from source systems.
             Each extract should implement the ExtractAbstract interface.
 
-        transforms : list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]
+        transforms : list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]
             A list of transform operations to manipulate the extracted data.
             Each transform should implement the TransformAbstract interface.
 
@@ -142,18 +142,18 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     @property
     def transforms(
         self,
-    ) -> list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
+    ) -> list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]:
         """
         Get the list of transform configurations.
 
         Returns:
-            list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
+            list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]:
                 The list of transform configurations.
         """
         return self._transforms
 
     @transforms.setter
-    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]) -> None:
+    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]) -> None:
         self._transforms = value
 
     @property
