@@ -13,7 +13,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.transforms.functions.base import FunctionAbstract, FunctionPyspark
-from ingestion_framework.transforms.functions.pyspark.select import SelectFunctionPyspark
+from ingestion_framework.transforms.functions.select import SelectFunctionPyspark
 from ingestion_framework.types import DataFrameT, RegistrySingleton
 
 FUNCTIONS: Final[str] = "functions"

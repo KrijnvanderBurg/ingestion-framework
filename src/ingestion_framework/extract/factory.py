@@ -10,7 +10,7 @@ from abc import ABC
 from typing import Any
 
 from ingestion_framework.extract.base import DATA_FORMAT, ExtractAbstract, ExtractFormat
-from ingestion_framework.extract.pyspark.file_extract import ExtractFilePyspark
+from ingestion_framework.extract.file_extract import ExtractFilePyspark
 
 
 class ExtractContextAbstract(ABC):
