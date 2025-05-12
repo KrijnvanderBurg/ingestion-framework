@@ -186,20 +186,23 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
         Create a StructType schema from a file.
 
         Args:
-            filepath (str): Path to the schema file.
+            filepath (str): The path to the file containing the schema definition.
 
         Returns:
             StructType: The PySpark schema created from the file.
 
         Raises:
-            FileNotFoundError: If the schema file is not found.
-            PermissionError: If permission is denied for accessing the schema file.
-            ValueError: If there's an error decoding the JSON schema.
+            ValueError: If there's an error reading or parsing the file.
+            FileNotFoundError: If the specified file doesn't exist.
 
         Examples:
             >>> schema = SchemaHandlerPyspark.from_file("/path/to/schema.json")
         """
-        file_handler: FileHandler = FileHandlerContext.factory(filepath=filepath)
-        file_content = file_handler.read()
-        schema = SchemaHandlerPyspark.from_dict(schema=file_content)
-        return schema
+        file_handler = FileHandlerContext.factory(filepath=filepath)
+        try:
+            schema_dict = file_handler.read()
+            return SchemaHandlerPyspark.from_dict(schema=schema_dict)
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Schema file not found: {filepath}") from e
+        except Exception as e:
+            raise ValueError(f"Error reading schema from file {filepath}: {e}") from e

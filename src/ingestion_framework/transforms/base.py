@@ -286,7 +286,7 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
 
 
-class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
+class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark]):
     """
     PySpark-specific implementation of transformation.
 
@@ -297,4 +297,5 @@ class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark,
     load_model_concrete = TransformModelPyspark
     SUPPORTED_FUNCTIONS: dict[str, Any] = {
         "select": SelectFunctionPyspark,
+        # Additional transform functions can be added here
     }
