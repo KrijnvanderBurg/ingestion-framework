@@ -11,6 +11,7 @@ from typing import Any, Final, Self
 
 from pyspark.sql import functions as f
 from pyspark.sql.column import Column
+from pyspark.sql.dataframe import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.transforms.functions.base import (
@@ -103,7 +104,7 @@ class SelectFunctionModelPysparkArgs(SelectFunctionModelAbstract.Args):
             for col_name in confeti[COLUMNS]:
                 columns.append(f.col(col_name))
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(columns=columns)
 
@@ -168,16 +169,18 @@ class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], 
             ```
         """
 
-        def f(dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
+        def __f(dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
             """
             Select columns from the DataFrame in the registry.
 
             Args:
                 dataframe_registry (RegistrySingleton): The registry containing DataFrames.
                 dataframe_name (str): The name of the DataFrame in the registry.
-            """
-            dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(
-                *self.model.arguments.columns
-            )
+            #"""
+            df: DataFramePyspark = dataframe_registry[dataframe_name]
 
-        return f
+            df = df.select(*self.model.arguments.columns)
+
+            dataframe_registry[dataframe_name] = df
+
+        return __f
