@@ -1,6 +1,5 @@
 """
-TODO
-
+Base classes for transform operations in the ingestion framework.
 
 ==============================================================================
 Copyright Krijn van der Burg. All rights reserved.
@@ -20,18 +19,17 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
-
-# from ingestion_framework.transforms.recipes.add_ingestion_datetime import AddIngestionDatetimeRecipe
-from ingestion_framework.transforms.recipes.base import RecipeAbstract, RecipePyspark
-
-# from ingestion_framework.transforms.recipes.calculate_birth_year import CalculateBirthYearRecipe
-from ingestion_framework.transforms.recipes.select_columns import SelectColumnsRecipePyspark
+from ingestion_framework.transforms.recipes.registry import Recipe, recipe_registry
 from ingestion_framework.types import DataFrameT, RegistrySingleton
+from ingestion_framework.utils.log_handler import set_logger
 
+logger = set_logger(__name__)
+
+# Constants
+# NOTE: Changed from "functions" to match the test case using "recipes"
 FUNCTIONS: Final[str] = "recipes"
 FUNCTION: Final[str] = "recipe"
-
-
+ARGUMENTS: Final[str] = "arguments"
 NAME: Final[str] = "name"
 UPSTREAM_NAME: Final[str] = "upstream_name"
 
@@ -89,8 +87,8 @@ class TransformModelAbstract(ABC):
             >>>     {
             >>>         "name": "bronze-test-transform-dev",
             >>>         "upstream_name": ["bronze-test-extract-dev"],
-            >>>         "recipes": [
-            >>>             {"function": "cast", "arguments": {"columns": {"age": "LongType"}}},
+            >>>         "functions": [
+            >>>             {"recipe": "select_columns", "arguments": {"columns": ["name", "age"]}},
             >>>             // etc.
             >>>         ],
             >>>     }
@@ -108,29 +106,20 @@ class TransformModelAbstract(ABC):
 class TransformModelPyspark(TransformModelAbstract):
     """
     Modelification for PySpark data transformation.
-
-    Examples:
-        >>> df = spark.createDataFrame(data=[("Alice", 27), ("Bob", 32),], schema=["name", "age"])
-        >>> dict = {"function": "cast", "arguments": {"columns": {"age": "StringType",}}}
-        >>> transform = TransformFunction.from_dict(dict=dict[str, Any])
-        >>> df = df.transform(func=transform).printSchema()
-        root
-        |-- name: string (nullable = true)
-        |-- age: string (nullable = true)
     """
+
+    pass
 
 
 TransformModelT = TypeVar("TransformModelT", bound=TransformModelAbstract)
-FunctionT = TypeVar("FunctionT", bound=RecipeAbstract)
 
 
-class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
+class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
     """Transform abstract class."""
 
     load_model_concrete: type[TransformModelT]
-    SUPPORTED_FUNCTIONS: dict[str, Any]
 
-    def __init__(self, model: TransformModelT, recipes: list[FunctionT]) -> None:
+    def __init__(self, model: TransformModelT, recipes: list[Recipe]) -> None:
         self.model = model
         self.recipes = recipes
         self.data_registry = RegistrySingleton()
@@ -144,11 +133,11 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
         self._model = value
 
     @property
-    def recipes(self) -> list[FunctionT]:
+    def recipes(self) -> list[Recipe]:
         return self._recipes
 
     @recipes.setter
-    def recipes(self, value: list[FunctionT]) -> None:
+    def recipes(self, value: list[Recipe]) -> None:
         self._recipes = value
 
     @property
@@ -165,35 +154,36 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
         model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
 
         recipes = []
+        logger.info(f"Processing transform confeti: {confeti}")
+        logger.info(f"Looking for recipes under key '{FUNCTIONS}'")
 
         for function_confeti in confeti.get(FUNCTIONS, []):
-            function_name: str = function_confeti[FUNCTION]
+            logger.info(f"Processing recipe confeti: {function_confeti}")
+            try:
+                recipe = recipe_registry.from_confeti(function_confeti)
+                recipes.append(recipe)
+                logger.info(f"Successfully created recipe: {recipe.__class__.__name__}")
+            except Exception as e:
+                logger.error(f"Error creating recipe: {e}")
+                raise
 
-            if function_name not in cls.SUPPORTED_FUNCTIONS.keys():
-                raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
-
-            function_concrete: FunctionT = cls.SUPPORTED_FUNCTIONS[function_name]
-            function_ = function_concrete.from_confeti(confeti=function_confeti)
-            recipes.append(function_)
-
+        logger.info(f"Created {len(recipes)} recipes")
         return cls(model=model, recipes=recipes)
 
     def transform(self) -> None:
         """
         Apply all transform recipes on df.
         """
-        for function in self.recipes:
-            function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
+        logger.info(f"Applying {len(self.recipes)} recipes to {self.model.name}")
+        for recipe in self.recipes:
+            logger.info(f"Applying recipe {recipe.__class__.__name__}")
+            recipe.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
+        logger.info(f"All recipes applied to {self.model.name}")
 
 
-class TransformPyspark(TransformAbstract[TransformModelPyspark, RecipePyspark, DataFramePyspark], ABC):
+class TransformPyspark(TransformAbstract[TransformModelPyspark, DataFramePyspark]):
     """
-    Concrete implementation for PySpark DataFrame transformion.
+    Concrete implementation for PySpark DataFrame transformation.
     """
 
     load_model_concrete = TransformModelPyspark
-    SUPPORTED_FUNCTIONS: dict[str, Any] = {
-        # "add_ingestion_datetime": AddIngestionDatetimeRecipe,
-        # "calculate_birth_year": CalculateBirthYearRecipe,
-        "select_columns": SelectColumnsRecipePyspark,
-    }

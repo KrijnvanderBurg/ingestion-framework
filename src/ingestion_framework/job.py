@@ -23,7 +23,6 @@ from ingestion_framework.transforms.base import (
     TransformModelAbstract,
     TransformPyspark,
 )
-from ingestion_framework.transforms.recipes.base import RecipeAbstract
 from ingestion_framework.types import DataFrameT, StreamingQueryT
 from ingestion_framework.utils.file_handler import FileHandlerContext
 
@@ -58,14 +57,6 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     Generic Parameters:
         DataFrameT: The type of DataFrame used in the ETL process (e.g., Pandas DataFrame, Spark DataFrame).
         StreamingQueryT: The type of streaming query returned by streaming operations.
-
-    Usage:
-        Concrete implementations must inherit from this class and implement the abstract
-        methods. The class is designed to be initialized with specific extract, transform,
-        and load configurations, and executed as a single ETL job.
-
-        Job configuration can be provided through a dictionary structure via the from_confeti
-        class method, which handles instantiation of all extract, transform, and load components.
     """
 
     extract_concrete: type[ExtractContextAbstract]
@@ -76,7 +67,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self,
         engine: Engine,
         extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]],
-        transforms: list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]],
+        transforms: list[TransformAbstract[TransformModelAbstract, DataFrameT]],
         loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]],
     ) -> None:
         """
@@ -84,27 +75,6 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
         This constructor sets up a data processing job with the specified components for data extraction,
         transformation, and loading.
-
-        Parameters
-        ----------
-        engine : Engine
-            The execution engine that will run the job operations.
-
-        extracts : list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]
-            A list of extract operations to retrieve data from source systems.
-            Each extract should implement the ExtractAbstract interface.
-
-        transforms : list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]
-            A list of transform operations to manipulate the extracted data.
-            Each transform should implement the TransformAbstract interface.
-
-        loads : list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]
-            A list of load operations to store the transformed data in target systems.
-            Each load should implement the LoadAbstract interface.
-
-        Returns
-        -------
-        None
         """
         self.engine = engine
         self.extracts = extracts
@@ -140,20 +110,18 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self._extracts = value
 
     @property
-    def transforms(
-        self,
-    ) -> list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]:
+    def transforms(self) -> list[TransformAbstract[TransformModelAbstract, DataFrameT]]:
         """
         Get the list of transform configurations.
 
         Returns:
-            list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]:
+            list[TransformAbstract[TransformModelAbstract, DataFrameT]]:
                 The list of transform configurations.
         """
         return self._transforms
 
     @transforms.setter
-    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, RecipeAbstract, DataFrameT]]) -> None:
+    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, DataFrameT]]) -> None:
         self._transforms = value
 
     @property
@@ -162,8 +130,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         Returns the list of load objects associated with this job.
 
         Returns:
-            list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]: A list of load objects that implement
-            the LoadAbstract interface with specific type parameters for model, dataframe, and streaming query.
+            list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]: A list of load objects.
         """
         return self._loads
 
@@ -253,21 +220,6 @@ class JobPyspark(JobAbstract):
     This class provides a concrete implementation of the JobAbstract class for
     PySpark-based data processing. It sets up appropriate context classes for
     extraction, transformation, and loading operations in a PySpark environment.
-
-    Attributes:
-        extract_concrete: The PySpark-specific extraction context class.
-        transform_concrete: The PySpark-specific transformation class.
-        load_concrete: The PySpark-specific loading context class.
-
-    Examples:
-        >>> job_config = {
-        >>>     "engine": "pyspark",
-        >>>     "extracts": [...],
-        >>>     "transforms": [...],
-        >>>     "loads": [...]
-        >>> }
-        >>> job = JobPyspark.from_confeti(job_config)
-        >>> job.execute()
     """
 
     extract_concrete = ExtractContextPyspark
