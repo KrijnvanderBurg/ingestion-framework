@@ -103,9 +103,13 @@ class Registry:
         """Get the number of items tracked."""
         return len(self._items)
 
-    def __iter__(self) -> Iterator[Any]:
-        """Iterate over the items."""
-        return iter(self._items.values())
+    def __iter__(self) -> Iterator[str]:
+        """Iterate over the registry's keys."""
+        return iter(self._items)
+
+    def keys(self) -> list[str]:
+        """Get all keys in the registry."""
+        return list(self._items.keys())
 
 
 class RegistrySingleton(Registry, metaclass=SingletonType):
