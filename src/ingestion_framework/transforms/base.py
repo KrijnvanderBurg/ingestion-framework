@@ -1,16 +1,5 @@
 """
 Base classes for transform operations in the ingestion framework.
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
 """
 
 from abc import ABC
@@ -26,7 +15,6 @@ from ingestion_framework.utils.log_handler import set_logger
 logger = set_logger(__name__)
 
 # Constants
-# NOTE: Changed from "functions" to match the test case using "recipes"
 FUNCTIONS: Final[str] = "recipes"
 FUNCTION: Final[str] = "recipe"
 ARGUMENTS: Final[str] = "arguments"
@@ -87,7 +75,7 @@ class TransformModelAbstract(ABC):
             >>>     {
             >>>         "name": "bronze-test-transform-dev",
             >>>         "upstream_name": ["bronze-test-extract-dev"],
-            >>>         "functions": [
+            >>>         "recipes": [
             >>>             {"recipe": "select_columns", "arguments": {"columns": ["name", "age"]}},
             >>>             // etc.
             >>>         ],
@@ -107,8 +95,6 @@ class TransformModelPyspark(TransformModelAbstract):
     """
     Modelification for PySpark data transformation.
     """
-
-    pass
 
 
 TransformModelT = TypeVar("TransformModelT", bound=TransformModelAbstract)
@@ -155,12 +141,15 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
 
         recipes = []
         logger.info(f"Processing transform confeti: {confeti}")
-        logger.info(f"Looking for recipes under key '{FUNCTIONS}'")
 
         for function_confeti in confeti.get(FUNCTIONS, []):
             logger.info(f"Processing recipe confeti: {function_confeti}")
             try:
                 recipe = recipe_registry.from_confeti(function_confeti)
+                if recipe is None:
+                    recipe_name = function_confeti["recipe"]
+                    logger.error(f"Recipe '{recipe_name}' was created as None")
+                    raise ValueError(f"Recipe '{recipe_name}' creation failed")
                 recipes.append(recipe)
                 logger.info(f"Successfully created recipe: {recipe.__class__.__name__}")
             except Exception as e:

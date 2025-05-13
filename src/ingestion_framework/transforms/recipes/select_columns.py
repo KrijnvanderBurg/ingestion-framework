@@ -36,7 +36,9 @@ class SelectColumnsRecipePyspark(Recipe):
             columns: List of columns to select
         """
         self.columns = columns
-        logger.info(f"SelectColumnsRecipePyspark initialized with columns: {[col.name for col in columns]}")
+        logger.info(
+            f"SelectColumnsRecipePyspark initialized with columns: {[c._jc.toString() if hasattr(c, '_jc') else str(c) for c in columns]}"
+        )
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> "SelectColumnsRecipePyspark":
@@ -73,7 +75,7 @@ class SelectColumnsRecipePyspark(Recipe):
         logger.info(f"Columns before: {dataframe_registry[dataframe_name].columns}")
 
         # Get only column names for better logging
-        column_names = [col.name for col in self.columns]
+        column_names = [col._jc.toString() if hasattr(col, "_jc") else str(col) for col in self.columns]
         logger.info(f"Selecting columns: {column_names}")
 
         # Apply the transformation
@@ -84,4 +86,4 @@ class SelectColumnsRecipePyspark(Recipe):
 
 
 # Print a message to confirm this module is being imported
-print("SelectColumnsRecipePyspark registered with recipe_registry")
+logger.info("SelectColumnsRecipePyspark registered with recipe_registry")
