@@ -9,7 +9,7 @@ from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.transforms.recipes.registry import Recipe, recipe_registry
-from ingestion_framework.types import RegistrySingleton
+from ingestion_framework.types import DataFrameRegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
 logger = set_logger(__name__)
@@ -20,7 +20,7 @@ ARGUMENTS: Final[str] = "arguments"
 
 
 # Make sure this decorator is executed at import time
-@recipe_registry.register("select_columns")
+@recipe_registry().register("select_columns")
 class SelectColumnsRecipePyspark(Recipe):
     """
     Recipe for selecting columns from a DataFrame.
@@ -67,7 +67,7 @@ class SelectColumnsRecipePyspark(Recipe):
 
         return cls(columns=columns)
 
-    def callable_(self, dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
+    def callable_(self, dataframe_registry: DataFrameRegistrySingleton, dataframe_name: str) -> None:
         """
         Apply the column selection transformation to a dataframe.
         """

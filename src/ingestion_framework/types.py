@@ -129,3 +129,31 @@ class RegistrySingleton(Registry, metaclass=SingletonType):
         another_registry = RegistrySingleton()  # Returns the same instance as `registry`
         assert registry is another_registry  # True
     """
+
+
+class DataFrameRegistrySingleton(Registry, metaclass=SingletonType):
+    """
+    A singleton registry specifically for storing and retrieving DataFrames by name.
+
+    This class combines the functionality of the Registry class with a singleton pattern
+    implemented via the SingletonType metaclass. It ensures that only one instance of the
+    dataframe registry exists throughout the application lifecycle.
+
+    This is separate from the Recipe registry to prevent collisions between recipe and
+    dataframe names.
+
+    Inherits:
+        Registry: Base registry functionality
+        metaclass=SingletonType: Metaclass that implements the singleton pattern
+
+    Usage:
+        df_registry = DataFrameRegistrySingleton()  # First instantiation
+        another_df_registry = DataFrameRegistrySingleton()  # Returns the same instance
+        assert df_registry is another_df_registry  # True
+
+        # Store a DataFrame
+        df_registry["my_dataframe"] = my_dataframe
+
+        # Retrieve a DataFrame
+        retrieved_df = df_registry["my_dataframe"]
+    """

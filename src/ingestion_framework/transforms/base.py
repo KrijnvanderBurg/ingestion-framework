@@ -9,7 +9,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.transforms.recipes.registry import Recipe, recipe_registry
-from ingestion_framework.types import DataFrameT, RegistrySingleton
+from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT
 from ingestion_framework.utils.log_handler import set_logger
 
 logger = set_logger(__name__)
@@ -108,7 +108,7 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
     def __init__(self, model: TransformModelT, recipes: list[Recipe]) -> None:
         self.model = model
         self.recipes = recipes
-        self.data_registry = RegistrySingleton()
+        self.data_registry = DataFrameRegistrySingleton()
 
     @property
     def model(self) -> TransformModelT:
@@ -127,11 +127,11 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         self._recipes = value
 
     @property
-    def data_registry(self) -> RegistrySingleton:
+    def data_registry(self) -> DataFrameRegistrySingleton:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: RegistrySingleton) -> None:
+    def data_registry(self, value: DataFrameRegistrySingleton) -> None:
         self._data_registry = value
 
     @classmethod
@@ -145,7 +145,7 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         for function_confeti in confeti.get(FUNCTIONS, []):
             logger.info(f"Processing recipe confeti: {function_confeti}")
             try:
-                recipe = recipe_registry.from_confeti(function_confeti)
+                recipe = recipe_registry().create_recipe(function_confeti)
                 if recipe is None:
                     recipe_name = function_confeti["recipe"]
                     logger.error(f"Recipe '{recipe_name}' was created as None")
