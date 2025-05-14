@@ -142,7 +142,7 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         recipes = []
 
         for function_confeti in confeti.get(FUNCTIONS, []):
-            recipe = recipe_registry.create_recipe(function_confeti)
+            recipe = recipe_registry.from_confeti(function_confeti)
             if recipe is None:
                 recipe_name = function_confeti["recipe"]
                 raise ValueError(f"Recipe '{recipe_name}' creation failed")

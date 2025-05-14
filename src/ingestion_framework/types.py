@@ -147,6 +147,29 @@ class RegistrySingleton(Registry, metaclass=SingletonType):
 
         return decorator
 
+    def from_confeti(self, confeti: dict[str, Any]):
+        """
+        Create a PySpark recipe from configuration.
+
+        Args:
+            confeti (dict[str, Any]): The recipe configuration
+
+        Returns:
+            RecipePyspark: The created PySpark recipe instance
+
+        Raises:
+            KeyError: If the recipe name is not found in registry
+        """
+        component_id = confeti.get("recipe")
+        if not component_id:
+            raise KeyError("Missing 'recipe' key in configuration")
+
+        if component_id not in self:
+            raise KeyError(f"Recipe '{component_id}' not found in registry")
+
+        component_cls = self[component_id]
+        return component_cls.from_confeti(confeti)
+
 
 class RecipeRegistrySingleton(RegistrySingleton):
     """TODO"""

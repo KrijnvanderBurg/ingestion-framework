@@ -213,30 +213,5 @@ class RecipePysparkRegistry(RegistrySingleton):
     from RegistrySingleton.
     """
 
-    def create_recipe(self, confeti: dict[str, Any]) -> RecipePyspark:
-        """
-        Create a PySpark recipe from configuration.
-
-        Args:
-            confeti (dict[str, Any]): The recipe configuration
-
-        Returns:
-            RecipePyspark: The created PySpark recipe instance
-
-        Raises:
-            KeyError: If the recipe name is not found in registry
-        """
-        component_id = confeti.get("recipe")
-        if not component_id:
-            raise KeyError("Missing 'recipe' key in configuration")
-
-        if component_id not in self:
-            logger.error(f"Recipe '{component_id}' not found in registry. Available: {list(self.keys())}")
-            raise KeyError(f"Recipe '{component_id}' not found in registry")
-
-        component_cls = self[component_id]
-        logger.info(f"Creating Recipe '{component_id}' with class {component_cls.__name__}")
-        return component_cls.from_confeti(confeti)
-
 
 recipe_registry = RecipePysparkRegistry()
