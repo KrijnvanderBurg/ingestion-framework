@@ -14,10 +14,10 @@ from typing import Any, Final, Generic, Self
 from pyspark.sql.streaming.query import StreamingQuery
 
 from ingestion_framework.exceptions import DictKeyError
+from ingestion_framework.extract import extract_registry
 from ingestion_framework.extract.base import ExtractAbstract, ExtractModelAbstract
-from ingestion_framework.extract.factory import ExtractContextAbstract, ExtractContextPyspark
+from ingestion_framework.load import load_registry
 from ingestion_framework.load.base import LoadAbstract, LoadModelAbstract
-from ingestion_framework.load.factory import LoadContextAbstract, LoadContextPyspark
 from ingestion_framework.transforms.base import (
     TransformAbstract,
     TransformModelAbstract,
@@ -49,19 +49,12 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     The job follows a generic approach that can work with different dataframe types
     and streaming query implementations through type parameters.
 
-    Attributes:
-        extract_concrete (type[ExtractContextAbstract]): The concrete class type for extraction context.
-        transform_concrete (type[TransformAbstract]): The concrete class type for transformations.
-        load_concrete (type[LoadContextAbstract]): The concrete class type for loading context.
-
     Generic Parameters:
         DataFrameT: The type of DataFrame used in the ETL process (e.g., Pandas DataFrame, Spark DataFrame).
         StreamingQueryT: The type of streaming query returned by streaming operations.
     """
 
-    extract_concrete: type[ExtractContextAbstract]
     transform_concrete: type[TransformAbstract]
-    load_concrete: type[LoadContextAbstract]
 
     def __init__(
         self,
@@ -154,8 +147,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
             extracts: list[ExtractAbstract] = []
             for extract_confeti in confeti[EXTRACTS]:
-                extract_strategy = cls.extract_concrete.factory(confeti=extract_confeti)
-                extract = extract_strategy.from_confeti(confeti=extract_confeti)
+                extract = extract_registry.create_extract(confeti=extract_confeti)
                 extracts.append(extract)
 
             transforms: list[TransformAbstract] = []
@@ -165,8 +157,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
             loads: list[LoadAbstract] = []
             for load_confeti in confeti[LOADS]:
-                load_strategy = cls.load_concrete.factory(confeti=load_confeti)
-                load = load_strategy.from_confeti(confeti=load_confeti)
+                load = load_registry.create_load(confeti=load_confeti)
                 loads.append(load)
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=confeti) from e
@@ -222,9 +213,7 @@ class JobPyspark(JobAbstract):
     extraction, transformation, and loading operations in a PySpark environment.
     """
 
-    extract_concrete = ExtractContextPyspark
     transform_concrete = TransformPyspark
-    load_concrete = LoadContextPyspark
 
     def execute(self) -> None:
         """

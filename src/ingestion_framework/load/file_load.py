@@ -13,6 +13,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
 
 from ingestion_framework.load.base import LoadAbstract, LoadModelFilePyspark, LoadModelT, LoadPyspark
+from ingestion_framework.load.registry import load_registry
 from ingestion_framework.types import DataFrameT, StreamingQueryT
 
 
@@ -62,3 +63,9 @@ class LoadFilePyspark(LoadFileAbstract[LoadModelFilePyspark, DataFramePyspark, S
             outputMode=self.model.mode.value,
             **self.model.options,
         )
+
+
+# Register load formats
+load_registry.register("parquet")(LoadFilePyspark)
+load_registry.register("json")(LoadFilePyspark)
+load_registry.register("csv")(LoadFilePyspark)

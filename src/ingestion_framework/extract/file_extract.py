@@ -12,6 +12,7 @@ from typing import Generic
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.extract.base import ExtractAbstract, ExtractModelFilePyspark, ExtractModelT, ExtractPyspark
+from ingestion_framework.extract.registry import extract_registry
 from ingestion_framework.types import DataFrameT
 from ingestion_framework.utils.spark_handler import SparkHandler
 
@@ -60,3 +61,9 @@ class ExtractFilePyspark(ExtractFileAbstract[ExtractModelFilePyspark, DataFrameP
             schema=self.model.schema,
             **self.model.options,
         )
+
+
+# Register extract formats
+extract_registry.register("parquet")(ExtractFilePyspark)
+extract_registry.register("json")(ExtractFilePyspark)
+extract_registry.register("csv")(ExtractFilePyspark)
