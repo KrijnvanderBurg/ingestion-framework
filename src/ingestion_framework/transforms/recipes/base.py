@@ -7,8 +7,7 @@ from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.registry import ComponentRegistry
-from ingestion_framework.types import DataFrameRegistrySingleton
+from ingestion_framework.types import DataFrameRegistrySingleton, RegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
 logger = set_logger(__name__)
@@ -219,13 +218,13 @@ class Recipe:
         """
 
 
-class RecipeRegistry(ComponentRegistry[Recipe]):
+class RecipeRegistry(RegistrySingleton):
     """
     A singleton registry specifically for transformation recipes.
 
     This registry stores recipe classes and provides methods for creating
     recipe instances from configuration. It inherits common registry functionality
-    from ComponentRegistry.
+    from RegistrySingleton.
     """
 
     def create_recipe(self, confeti: dict[str, Any]) -> Recipe:
@@ -241,7 +240,17 @@ class RecipeRegistry(ComponentRegistry[Recipe]):
         Raises:
             KeyError: If the recipe name is not found in registry
         """
-        return self.create_component(confeti, "Recipe", "recipe")
+        component_id = confeti.get("recipe")
+        if not component_id:
+            raise KeyError("Missing 'recipe' key in configuration")
+
+        if component_id not in self:
+            logger.error(f"Recipe '{component_id}' not found in registry. Available: {list(self.keys())}")
+            raise KeyError(f"Recipe '{component_id}' not found in registry")
+
+        component_cls = self[component_id]
+        logger.info(f"Creating Recipe '{component_id}' with class {component_cls.__name__}")
+        return component_cls.from_confeti(confeti)
 
 
 recipe_registry = RecipeRegistry()

@@ -8,10 +8,13 @@ by name, allowing for dynamic selection of extractors based on configuration.
 from typing import Any
 
 from ingestion_framework.extract.base import ExtractAbstract
-from ingestion_framework.registry import ComponentRegistry
+from ingestion_framework.types import RegistrySingleton
+from ingestion_framework.utils.log_handler import set_logger
+
+logger = set_logger(__name__)
 
 
-class ExtractRegistry(ComponentRegistry[ExtractAbstract]):
+class ExtractRegistry(RegistrySingleton):
     """
     A singleton registry specifically for extraction components.
 
@@ -32,7 +35,17 @@ class ExtractRegistry(ComponentRegistry[ExtractAbstract]):
         Raises:
             KeyError: If the extract format is not found in registry
         """
-        return self.create_component(confeti, "Extract format", "data_format")
+        component_id = confeti.get("data_format")
+        if not component_id:
+            raise KeyError("Missing 'data_format' key in configuration")
+
+        if component_id not in self:
+            logger.error(f"Extract format '{component_id}' not found in registry. Available: {list(self.keys())}")
+            raise KeyError(f"Extract format '{component_id}' not found in registry")
+
+        component_cls = self[component_id]
+        logger.info(f"Creating Extract format '{component_id}' with class {component_cls.__name__}")
+        return component_cls.from_confeti(confeti)
 
 
 extract_registry = ExtractRegistry()
