@@ -8,7 +8,7 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
 from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT
 from ingestion_framework.utils.log_handler import set_logger
 
@@ -105,7 +105,7 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
 
     load_model_concrete: type[TransformModelT]
 
-    def __init__(self, model: TransformModelT, recipes: list[Recipe]) -> None:
+    def __init__(self, model: TransformModelT, recipes: list[RecipePyspark]) -> None:
         self.model = model
         self.recipes = recipes
         self.data_registry = DataFrameRegistrySingleton()
@@ -119,11 +119,11 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         self._model = value
 
     @property
-    def recipes(self) -> list[Recipe]:
+    def recipes(self) -> list[RecipePyspark]:
         return self._recipes
 
     @recipes.setter
-    def recipes(self, value: list[Recipe]) -> None:
+    def recipes(self, value: list[RecipePyspark]) -> None:
         self._recipes = value
 
     @property

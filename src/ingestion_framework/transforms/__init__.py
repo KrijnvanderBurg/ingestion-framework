@@ -7,7 +7,7 @@ using a registry pattern for transformation recipes.
 """
 
 from ingestion_framework.transforms.base import TransformAbstract, TransformPyspark
-from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
 
 # Explicitly import recipe implementations to ensure they're registered
 from ingestion_framework.transforms.recipes.select_columns import SelectColumnsRecipePyspark
@@ -15,7 +15,7 @@ from ingestion_framework.transforms.recipes.select_columns import SelectColumnsR
 __all__ = [
     "TransformAbstract",
     "TransformPyspark",
-    "Recipe",
+    "RecipePyspark",
     "recipe_registry",
     "SelectColumnsRecipePyspark",
 ]

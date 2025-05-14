@@ -2,13 +2,14 @@
 Column transform function with simplified recipe registry pattern.
 """
 
+from collections.abc import Callable
 from typing import Any, Final
 
 from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
 from ingestion_framework.types import DataFrameRegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
@@ -21,7 +22,7 @@ ARGUMENTS: Final[str] = "arguments"
 
 # Make sure this decorator is executed at import time
 @recipe_registry.register("select_columns")
-class SelectColumnsRecipePyspark(Recipe):
+class SelectColumnsRecipePyspark(RecipePyspark):
     """
     Recipe for selecting columns from a DataFrame.
 
@@ -36,6 +37,8 @@ class SelectColumnsRecipePyspark(Recipe):
             columns: List of columns to select
         """
         self.columns = columns
+        # Call transform to set callable_
+        self.callable_ = self.transform()
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> "SelectColumnsRecipePyspark":
@@ -61,8 +64,14 @@ class SelectColumnsRecipePyspark(Recipe):
 
         return cls(columns=columns)
 
-    def callable_(self, dataframe_registry: DataFrameRegistrySingleton, dataframe_name: str) -> None:
+    def transform(self) -> Callable:
         """
-        Apply the column selection transformation to a dataframe.
+        Define the transformation to select columns from a dataframe.
+        
+        Returns:
+            Callable: A function that selects the specified columns from a dataframe
         """
-        dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(*self.columns)
+        def select_columns(dataframe_registry: DataFrameRegistrySingleton, dataframe_name: str) -> None:
+            dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(*self.columns)
+            
+        return select_columns

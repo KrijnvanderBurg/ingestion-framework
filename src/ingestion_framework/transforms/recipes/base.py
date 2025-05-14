@@ -169,23 +169,24 @@ class RecipeAbstract(Generic[RecipeModelT], ABC):
 class RecipePyspark(RecipeAbstract[RecipeModelT], ABC):
     """
     A concrete implementation of transformation functions using PySpark.
-    """
-
-    @abstractmethod
-    def transform(self) -> Callable:
-        """TODO"""
-
-
-class Recipe:
-    """
-    Base class for all transformation recipes.
-
+    
+    This class serves as the base for all transformation recipes that use PySpark.
     Recipes are reusable transformation components that can be applied to
     dataframes in the ingestion framework.
     """
 
+    @abstractmethod
+    def transform(self) -> Callable:
+        """
+        Define the transformation to be applied.
+        
+        Returns:
+            Callable: A callable that implements the transformation logic
+        """
+
     @classmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> "Recipe":
+    @abstractmethod
+    def from_confeti(cls, confeti: dict[str, Any]) -> "RecipePyspark":
         """
         Create a recipe instance from configuration.
 
@@ -196,46 +197,31 @@ class Recipe:
             confeti (dict[str, Any]): The recipe configuration
 
         Returns:
-            Recipe: An initialized recipe instance
-
-        Raises:
-            NotImplementedError: If not implemented in a subclass
-        """
-
-    def callable_(self, dataframe_registry: "DataFrameRegistrySingleton", dataframe_name: str) -> None:
-        """
-        Apply the recipe transformation to a dataframe.
-
-        This method must be implemented by each recipe subclass to perform the
-        actual transformation logic on the specified dataframe.
-
-        Args:
-            dataframe_registry: Registry containing dataframes
-            dataframe_name: Name of the dataframe to transform
+            RecipePyspark: An initialized recipe instance
 
         Raises:
             NotImplementedError: If not implemented in a subclass
         """
 
 
-class RecipeRegistry(RegistrySingleton):
+class RecipePysparkRegistry(RegistrySingleton):
     """
-    A singleton registry specifically for transformation recipes.
+    A singleton registry specifically for PySpark transformation recipes.
 
-    This registry stores recipe classes and provides methods for creating
+    This registry stores PySpark recipe classes and provides methods for creating
     recipe instances from configuration. It inherits common registry functionality
     from RegistrySingleton.
     """
 
-    def create_recipe(self, confeti: dict[str, Any]) -> Recipe:
+    def create_recipe(self, confeti: dict[str, Any]) -> RecipePyspark:
         """
-        Create a recipe from configuration.
+        Create a PySpark recipe from configuration.
 
         Args:
             confeti (dict[str, Any]): The recipe configuration
 
         Returns:
-            Recipe: The created recipe instance
+            RecipePyspark: The created PySpark recipe instance
 
         Raises:
             KeyError: If the recipe name is not found in registry
@@ -253,4 +239,4 @@ class RecipeRegistry(RegistrySingleton):
         return component_cls.from_confeti(confeti)
 
 
-recipe_registry = RecipeRegistry()
+recipe_registry = RecipePysparkRegistry()

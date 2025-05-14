@@ -5,13 +5,13 @@ This package contains the transformation recipes that can be applied to datafram
 during the transformation phase of the ETL process.
 """
 
-from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
 
 # Explicitly import recipe modules to ensure decorators are executed
 from ingestion_framework.transforms.recipes.select_columns import SelectColumnsRecipePyspark
 
 __all__ = [
-    "Recipe",
+    "RecipePyspark",
     "recipe_registry",
     "SelectColumnsRecipePyspark",
 ]
