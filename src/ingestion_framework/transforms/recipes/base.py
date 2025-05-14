@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameRegistrySingleton, RegistrySingleton
+from ingestion_framework.types import RegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
 logger = set_logger(__name__)
@@ -169,7 +169,7 @@ class RecipeAbstract(Generic[RecipeModelT], ABC):
 class RecipePyspark(RecipeAbstract[RecipeModelT], ABC):
     """
     A concrete implementation of transformation functions using PySpark.
-    
+
     This class serves as the base for all transformation recipes that use PySpark.
     Recipes are reusable transformation components that can be applied to
     dataframes in the ingestion framework.
@@ -179,7 +179,7 @@ class RecipePyspark(RecipeAbstract[RecipeModelT], ABC):
     def transform(self) -> Callable:
         """
         Define the transformation to be applied.
-        
+
         Returns:
             Callable: A callable that implements the transformation logic
         """

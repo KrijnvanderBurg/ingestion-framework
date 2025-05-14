@@ -67,11 +67,12 @@ class SelectColumnsRecipePyspark(RecipePyspark):
     def transform(self) -> Callable:
         """
         Define the transformation to select columns from a dataframe.
-        
+
         Returns:
             Callable: A function that selects the specified columns from a dataframe
         """
+
         def select_columns(dataframe_registry: DataFrameRegistrySingleton, dataframe_name: str) -> None:
             dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(*self.columns)
-            
+
         return select_columns
