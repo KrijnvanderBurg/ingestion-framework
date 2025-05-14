@@ -8,7 +8,7 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.recipes.registry import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
 from ingestion_framework.types import DataFrameRegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
@@ -20,7 +20,7 @@ ARGUMENTS: Final[str] = "arguments"
 
 
 # Make sure this decorator is executed at import time
-@recipe_registry().register("select_columns")
+@recipe_registry.register("select_columns")
 class SelectColumnsRecipePyspark(Recipe):
     """
     Recipe for selecting columns from a DataFrame.
@@ -36,9 +36,6 @@ class SelectColumnsRecipePyspark(Recipe):
             columns: List of columns to select
         """
         self.columns = columns
-        logger.info(
-            f"SelectColumnsRecipePyspark initialized with columns: {[c._jc.toString() if hasattr(c, '_jc') else str(c) for c in columns]}"
-        )
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> "SelectColumnsRecipePyspark":
@@ -54,16 +51,13 @@ class SelectColumnsRecipePyspark(Recipe):
         Raises:
             DictKeyError: If required keys are missing from the configuration
         """
-        logger.info(f"Creating SelectColumnsRecipePyspark from confeti: {confeti}")
         try:
             arguments = confeti[ARGUMENTS]
             columns = []
             for col_name in arguments[COLUMNS]:
                 columns.append(f.col(col_name))
-                logger.info(f"Added column: {col_name}")
         except KeyError as e:
-            logger.error(f"KeyError in SelectColumnsRecipePyspark.from_confeti: {e.args[0]}")
-            raise DictKeyError(key=e.args[0], dict_=confeti if e.args[0] == ARGUMENTS else arguments) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(columns=columns)
 
@@ -71,19 +65,4 @@ class SelectColumnsRecipePyspark(Recipe):
         """
         Apply the column selection transformation to a dataframe.
         """
-        logger.info(f"Executing select_columns on dataframe: {dataframe_name}")
-        logger.info(f"Columns before: {dataframe_registry[dataframe_name].columns}")
-
-        # Get only column names for better logging
-        column_names = [col._jc.toString() if hasattr(col, "_jc") else str(col) for col in self.columns]
-        logger.info(f"Selecting columns: {column_names}")
-
-        # Apply the transformation
         dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(*self.columns)
-
-        # Log the result
-        logger.info(f"Columns after: {dataframe_registry[dataframe_name].columns}")
-
-
-# Print a message to confirm this module is being imported
-logger.info("SelectColumnsRecipePyspark registered with recipe_registry")

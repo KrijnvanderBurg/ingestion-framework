@@ -8,7 +8,7 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.recipes.registry import Recipe, recipe_registry
+from ingestion_framework.transforms.recipes.base import Recipe, recipe_registry
 from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT
 from ingestion_framework.utils.log_handler import set_logger
 
@@ -140,34 +140,22 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
 
         recipes = []
-        logger.info(f"Processing transform confeti: {confeti}")
 
         for function_confeti in confeti.get(FUNCTIONS, []):
-            logger.info(f"Processing recipe confeti: {function_confeti}")
-            try:
-                recipe = recipe_registry().create_recipe(function_confeti)
-                if recipe is None:
-                    recipe_name = function_confeti["recipe"]
-                    logger.error(f"Recipe '{recipe_name}' was created as None")
-                    raise ValueError(f"Recipe '{recipe_name}' creation failed")
-                recipes.append(recipe)
-                logger.info(f"Successfully created recipe: {recipe.__class__.__name__}")
-            except Exception as e:
-                logger.error(f"Error creating recipe: {e}")
-                raise
+            recipe = recipe_registry.create_recipe(function_confeti)
+            if recipe is None:
+                recipe_name = function_confeti["recipe"]
+                raise ValueError(f"Recipe '{recipe_name}' creation failed")
+            recipes.append(recipe)
 
-        logger.info(f"Created {len(recipes)} recipes")
         return cls(model=model, recipes=recipes)
 
     def transform(self) -> None:
         """
         Apply all transform recipes on df.
         """
-        logger.info(f"Applying {len(self.recipes)} recipes to {self.model.name}")
         for recipe in self.recipes:
-            logger.info(f"Applying recipe {recipe.__class__.__name__}")
             recipe.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
-        logger.info(f"All recipes applied to {self.model.name}")
 
 
 class TransformPyspark(TransformAbstract[TransformModelPyspark, DataFramePyspark]):
