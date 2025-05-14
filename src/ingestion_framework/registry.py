@@ -65,7 +65,6 @@ class ComponentRegistry(Registry, Generic[T], metaclass=SingletonType):
         """
         component_id = confeti.get(key_name)
         if not component_id:
-            logger.error(f"Missing '{key_name}' key in configuration: {confeti}")
             raise KeyError(f"Missing '{key_name}' key in configuration")
 
         if component_id not in self:
