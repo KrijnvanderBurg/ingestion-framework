@@ -129,6 +129,116 @@ class RegistrySingleton(Registry, metaclass=SingletonType):
         another_registry = RegistrySingleton()  # Returns the same instance as `registry`
         assert registry is another_registry  # True
     """
+    
+    def register(self, name: str):
+        """
+        Decorator to register a class with the registry.
+
+        Args:
+            name (str): The name under which to register the class
+
+        Returns:
+            Callable: A decorator that registers the class
+        """
+        from ingestion_framework.utils.log_handler import set_logger
+        logger = set_logger(__name__)
+
+        def decorator(cls):
+            self[name] = cls
+            logger.info(f"Registered '{name}': {cls.__name__}")
+            return cls
+
+        return decorator
+
+    def create_component(self, confeti: dict[str, Any], component_name: str, key_name: str) -> Any:
+        """
+        Create a component instance from configuration.
+
+        Args:
+            confeti (dict[str, Any]): The configuration dictionary
+            component_name (str): The human-readable name of the component type (for error messages)
+            key_name (str): The key in the configuration that contains the component identifier
+
+        Returns:
+            Any: The created component instance
+
+        Raises:
+            KeyError: If the component identifier is not found or not registered
+        """
+        from ingestion_framework.utils.log_handler import set_logger
+        logger = set_logger(__name__)
+        
+        component_id = confeti.get(key_name)
+        if not component_id:
+            logger.error(f"Missing '{key_name}' key in configuration: {confeti}")
+            raise KeyError(f"Missing '{key_name}' key in configuration")
+
+        if component_id not in self:
+            logger.error(
+                f"{component_name} '{component_id}' not found in registry. Available: {list(self.keys())}"
+            )
+            raise KeyError(f"{component_name} '{component_id}' not found in registry")
+
+        component_cls = self[component_id]
+        logger.info(f"Creating {component_name} '{component_id}' with class {component_cls.__name__}")
+        return component_cls.from_confeti(confeti)
+
+
+class ComponentRegistrySingleton(RegistrySingleton):
+    """
+    A base class for component registries that provides common functionality.
+    
+    This class extends the RegistrySingleton with component-specific registration
+    and creation methods.
+    """
+    
+    def register_component(self, name: str, component_class: Any) -> None:
+        """
+        Register a component class with the registry.
+        
+        Args:
+            name (str): The name under which to register the component
+            component_class (Any): The component class to register
+        """
+        from ingestion_framework.utils.log_handler import set_logger
+        logger = set_logger(__name__)
+        
+        self[name] = component_class
+        logger.info(f"Registered component '{name}': {component_class.__name__}")
+    
+    def create_from_config(self, confeti: dict[str, Any], key_name: str, component_type_name: str) -> Any:
+        """
+        Create a component from configuration.
+        
+        Args:
+            confeti (dict[str, Any]): The configuration dictionary
+            key_name (str): The key in the configuration that identifies the component
+            component_type_name (str): The human-readable type name for error messages
+            
+        Returns:
+            Any: The created component instance
+            
+        Raises:
+            KeyError: If the component identifier is not found or not registered
+        """
+        from ingestion_framework.utils.log_handler import set_logger
+        logger = set_logger(__name__)
+        
+        component_id = confeti.get(key_name)
+        if not component_id:
+            logger.error(f"Missing '{key_name}' key in configuration: {confeti}")
+            raise KeyError(f"Missing '{key_name}' key in configuration")
+            
+        if component_id not in self:
+            logger.error(
+                f"{component_type_name} '{component_id}' not found in registry. "
+                f"Available: {list(self.keys())}"
+            )
+            raise KeyError(f"{component_type_name} '{component_id}' not found in registry")
+            
+        component_cls = self[component_id]
+        logger.info(f"Creating {component_type_name} '{component_id}' with class {component_cls.__name__}")
+        return component_cls.from_confeti(confeti)
 
 
 class DataFrameRegistrySingleton(Registry, metaclass=SingletonType):

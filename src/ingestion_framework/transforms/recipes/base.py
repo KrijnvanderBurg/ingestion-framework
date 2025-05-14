@@ -7,7 +7,8 @@ from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameRegistrySingleton, Registry, SingletonType
+from ingestion_framework.registry import ComponentRegistry
+from ingestion_framework.types import DataFrameRegistrySingleton
 from ingestion_framework.utils.log_handler import set_logger
 
 logger = set_logger(__name__)
@@ -218,39 +219,14 @@ class Recipe:
         """
 
 
-class RecipeRegistrySingleton(Registry, metaclass=SingletonType):
+class RecipeRegistry(ComponentRegistry[Recipe]):
     """
     A singleton registry specifically for transformation recipes.
-
-    This class combines the functionality of the Registry class with a singleton pattern
-    implemented via the SingletonType metaclass. It ensures that only one instance of the
-    recipe registry exists throughout the application lifecycle.
-
-    This is separate from the DataFrame registry to prevent collisions between recipe and
-    dataframe names.
-
-    Inherits:
-        Registry: Base registry functionality
-        metaclass=SingletonType: Metaclass that implements the singleton pattern
+    
+    This registry stores recipe classes and provides methods for creating
+    recipe instances from configuration. It inherits common registry functionality
+    from ComponentRegistry.
     """
-
-    def register(self, name: str):
-        """
-        Decorator to register a recipe class with the registry.
-
-        Args:
-            name (str): The name under which to register the recipe
-
-        Returns:
-            Callable: A decorator that registers the recipe class
-        """
-
-        def decorator(recipe_cls):
-            self[name] = recipe_cls
-            logger.info("Registered recipe '%s': %s", name, recipe_cls.__name__)
-            return recipe_cls
-
-        return decorator
 
     def create_recipe(self, confeti: dict[str, Any]) -> Recipe:
         """
@@ -263,20 +239,9 @@ class RecipeRegistrySingleton(Registry, metaclass=SingletonType):
             Recipe: The created recipe instance
 
         Raises:
-            KeyError: If the recipe name is not found
+            KeyError: If the recipe name is not found in registry
         """
-        recipe_name = confeti.get("recipe")
-        if not recipe_name:
-            logger.error(f"Missing 'recipe' key in configuration: {confeti}")
-            raise KeyError("Missing 'recipe' key in configuration")
-
-        if recipe_name not in self:
-            logger.error(f"Recipe '{recipe_name}' not found in registry. Available recipes: {list(self.keys())}")
-            raise KeyError(f"Recipe '{recipe_name}' not found in registry")
-
-        recipe_cls = self[recipe_name]
-        logger.info(f"Creating recipe '{recipe_name}' with class {recipe_cls.__name__}")
-        return recipe_cls.from_confeti(confeti)
+        return self.create_component(confeti, "Recipe", "recipe")
 
 
-recipe_registry = RecipeRegistrySingleton()
+recipe_registry = RecipeRegistry()
