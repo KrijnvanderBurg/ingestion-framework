@@ -10,10 +10,11 @@ from typing import Any
 from ingestion_framework.extract.base import ExtractAbstract
 from ingestion_framework.registry import ComponentRegistry
 
+
 class ExtractRegistry(ComponentRegistry[ExtractAbstract]):
     """
     A singleton registry specifically for extraction components.
-    
+
     This registry stores extract classes and provides methods for creating
     extract instances from configuration.
     """

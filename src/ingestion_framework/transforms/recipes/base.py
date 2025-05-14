@@ -222,7 +222,7 @@ class Recipe:
 class RecipeRegistry(ComponentRegistry[Recipe]):
     """
     A singleton registry specifically for transformation recipes.
-    
+
     This registry stores recipe classes and provides methods for creating
     recipe instances from configuration. It inherits common registry functionality
     from ComponentRegistry.

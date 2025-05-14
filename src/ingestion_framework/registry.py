@@ -6,7 +6,6 @@ across the ingestion framework, reducing code duplication and providing
 consistent behavior for different component types.
 """
 
-import logging
 from typing import Any, Callable, Dict, Generic, Type, TypeVar
 
 from ingestion_framework.types import Registry, SingletonType
@@ -49,10 +48,7 @@ class ComponentRegistry(Registry, Generic[T], metaclass=SingletonType):
 
         return decorator
 
-    def create_component(self, 
-                       confeti: Dict[str, Any], 
-                       component_type_name: str, 
-                       key_name: str) -> T:
+    def create_component(self, confeti: Dict[str, Any], component_type_name: str, key_name: str) -> T:
         """
         Create a component instance from configuration.
 
@@ -74,8 +70,7 @@ class ComponentRegistry(Registry, Generic[T], metaclass=SingletonType):
 
         if component_id not in self:
             logger.error(
-                f"{component_type_name} '{component_id}' not found in registry. "
-                f"Available: {list(self.keys())}"
+                f"{component_type_name} '{component_id}' not found in registry. Available: {list(self.keys())}"
             )
             raise KeyError(f"{component_type_name} '{component_id}' not found in registry")
 
