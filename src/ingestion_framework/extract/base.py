@@ -1,9 +1,19 @@
 """
-Base classes for data extraction operations.
+TODO
 
-This module provides abstract and concrete base classes for defining data
-extraction operations in the ingestion framework. It implements interfaces and models
-for extracting data from various sources with different formats and execution modes.
+IO extract interface and strategy, extract implementations are in module ingestion_framework.loads.
+
+
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
+
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
 
 from abc import ABC, abstractmethod
@@ -14,7 +24,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.types import StructType
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT
+from ingestion_framework.types import DataFrameT, RegistrySingleton
 from ingestion_framework.utils.schema_handler import SchemaHandlerPyspark
 from ingestion_framework.utils.spark_handler import SparkHandler
 
@@ -117,22 +127,11 @@ class ExtractModelPyspark(ExtractModelAbstract, ABC):
 
 
 class ExtractModelFileAbstract(ExtractModelAbstract, ABC):
-    """
-    Abstract model class for file-based data extraction.
-
-    This class defines the interface for models that represent file-based data extraction
-    configurations, extending the base extract model with file-specific properties.
-    """
+    """TODO"""
 
 
 class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
-    """
-    PySpark-specific implementation of file-based extraction model.
-
-    This class provides a concrete implementation of the file-based extraction model
-    for PySpark, handling configuration details for reading data from file-based
-    sources using PySpark's DataFrame reader.
-    """
+    """TODO"""
 
     def __init__(
         self,
@@ -172,7 +171,7 @@ class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
             options = confeti[OPTIONS]
             schema = SchemaHandlerPyspark.schema_factory(schema=confeti[SCHEMA])
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         return cls(name=name, method=method, data_format=data_format, location=location, options=options, schema=schema)
 
@@ -187,7 +186,7 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
 
     def __init__(self, model: ExtractModelT) -> None:
         self.model = model
-        self.data_registry = DataFrameRegistrySingleton()
+        self.data_registry = RegistrySingleton()
 
     @property
     def model(self) -> ExtractModelT:
@@ -198,11 +197,11 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
         self._model = value
 
     @property
-    def data_registry(self) -> DataFrameRegistrySingleton:
+    def data_registry(self) -> RegistrySingleton:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: DataFrameRegistrySingleton) -> None:
+    def data_registry(self, value: RegistrySingleton) -> None:
         self._data_registry = value
 
     @classmethod

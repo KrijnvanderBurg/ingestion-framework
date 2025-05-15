@@ -18,8 +18,8 @@
         {
             "name": "transform-test",
             "upstream_name": "extract-test",
-            "recipes": [
-                { "recipe": "select_columns", "arguments": { "columns": ["name", "age"] } }
+            "functions": [
+                { "function": "select", "arguments": { "columns": ["name", "age"] } }
             ]
         }
     ],

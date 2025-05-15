@@ -1,5 +1,17 @@
 """
-Base classes for transform operations in the ingestion framework.
+TODO
+
+
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
+
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
 
 from abc import ABC
@@ -8,16 +20,14 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
-from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT
-from ingestion_framework.utils.log_handler import set_logger
+from ingestion_framework.transforms.functions.base import FunctionAbstract, FunctionPyspark
+from ingestion_framework.transforms.functions.pyspark.select import SelectFunctionPyspark
+from ingestion_framework.types import DataFrameT, RegistrySingleton
 
-logger = set_logger(__name__)
+FUNCTIONS: Final[str] = "functions"
+FUNCTION: Final[str] = "function"
 
-# Constants
-FUNCTIONS: Final[str] = "recipes"
-FUNCTION: Final[str] = "recipe"
-ARGUMENTS: Final[str] = "arguments"
+
 NAME: Final[str] = "name"
 UPSTREAM_NAME: Final[str] = "upstream_name"
 
@@ -28,7 +38,7 @@ class TransformModelAbstract(ABC):
 
     Args:
         name (str): The ID of the transformation modelification.
-        recipes (list): List of transformation recipes.
+        functions (list): List of transformation functions.
     """
 
     def __init__(self, name: str, upstream_name: str) -> None:
@@ -75,8 +85,8 @@ class TransformModelAbstract(ABC):
             >>>     {
             >>>         "name": "bronze-test-transform-dev",
             >>>         "upstream_name": ["bronze-test-extract-dev"],
-            >>>         "recipes": [
-            >>>             {"recipe": "select_columns", "arguments": {"columns": ["name", "age"]}},
+            >>>         "functions": [
+            >>>             {"function": "cast", "arguments": {"columns": {"age": "LongType"}}},
             >>>             // etc.
             >>>         ],
             >>>     }
@@ -86,7 +96,7 @@ class TransformModelAbstract(ABC):
             name = confeti[NAME]
             upstream_name = confeti[UPSTREAM_NAME]
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         return cls(name=name, upstream_name=upstream_name)
 
@@ -94,21 +104,32 @@ class TransformModelAbstract(ABC):
 class TransformModelPyspark(TransformModelAbstract):
     """
     Modelification for PySpark data transformation.
+
+    Examples:
+        >>> df = spark.createDataFrame(data=[("Alice", 27), ("Bob", 32),], schema=["name", "age"])
+        >>> dict = {"function": "cast", "arguments": {"columns": {"age": "StringType",}}}
+        >>> transform = TransformFunction.from_dict(dict=dict[str, Any])
+        >>> df = df.transform(func=transform).printSchema()
+        root
+        |-- name: string (nullable = true)
+        |-- age: string (nullable = true)
     """
 
 
 TransformModelT = TypeVar("TransformModelT", bound=TransformModelAbstract)
+FunctionT = TypeVar("FunctionT", bound=FunctionAbstract)
 
 
-class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
+class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
     """Transform abstract class."""
 
     load_model_concrete: type[TransformModelT]
+    SUPPORTED_FUNCTIONS: dict[str, Any]
 
-    def __init__(self, model: TransformModelT, recipes: list[RecipePyspark]) -> None:
+    def __init__(self, model: TransformModelT, functions: list[FunctionT]) -> None:
         self.model = model
-        self.recipes = recipes
-        self.data_registry = DataFrameRegistrySingleton()
+        self.functions = functions
+        self.data_registry = RegistrySingleton()
 
     @property
     def model(self) -> TransformModelT:
@@ -119,19 +140,19 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         self._model = value
 
     @property
-    def recipes(self) -> list[RecipePyspark]:
-        return self._recipes
+    def functions(self) -> list[FunctionT]:
+        return self._functions
 
-    @recipes.setter
-    def recipes(self, value: list[RecipePyspark]) -> None:
-        self._recipes = value
+    @functions.setter
+    def functions(self, value: list[FunctionT]) -> None:
+        self._functions = value
 
     @property
-    def data_registry(self) -> DataFrameRegistrySingleton:
+    def data_registry(self) -> RegistrySingleton:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: DataFrameRegistrySingleton) -> None:
+    def data_registry(self, value: RegistrySingleton) -> None:
         self._data_registry = value
 
     @classmethod
@@ -139,28 +160,34 @@ class TransformAbstract(Generic[TransformModelT, DataFrameT], ABC):
         """Create an instance of TransformAbstract from configuration."""
         model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
 
-        recipes = []
+        functions = []
 
         for function_confeti in confeti.get(FUNCTIONS, []):
-            recipe = recipe_registry.from_confeti(function_confeti)
-            if recipe is None:
-                recipe_name = function_confeti["recipe"]
-                raise ValueError(f"Recipe '{recipe_name}' creation failed")
-            recipes.append(recipe)
+            function_name: str = function_confeti[FUNCTION]
 
-        return cls(model=model, recipes=recipes)
+            if function_name not in cls.SUPPORTED_FUNCTIONS.keys():
+                raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
+
+            function_concrete: FunctionT = cls.SUPPORTED_FUNCTIONS[function_name]
+            function_ = function_concrete.from_confeti(confeti=function_confeti)
+            functions.append(function_)
+
+        return cls(model=model, functions=functions)
 
     def transform(self) -> None:
         """
-        Apply all transform recipes on df.
+        Apply all transform functions on df.
         """
-        for recipe in self.recipes:
-            recipe.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
+        for function in self.functions:
+            function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
 
 
-class TransformPyspark(TransformAbstract[TransformModelPyspark, DataFramePyspark]):
+class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
     """
-    Concrete implementation for PySpark DataFrame transformation.
+    Concrete implementation for PySpark DataFrame transformion.
     """
 
     load_model_concrete = TransformModelPyspark
+    SUPPORTED_FUNCTIONS: dict[str, Any] = {
+        "select": SelectFunctionPyspark,
+    }

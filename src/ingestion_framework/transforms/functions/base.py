@@ -1,5 +1,17 @@
 """
 Transform functions.
+
+
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
+
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
 
 from abc import ABC, abstractmethod
@@ -7,12 +19,8 @@ from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import RegistrySingleton
-from ingestion_framework.utils.log_handler import set_logger
 
-logger = set_logger(__name__)
-
-RECIPE: Final[str] = "recipe"
+FUNCTION: Final[str] = "function"
 ARGUMENTS: Final[str] = "arguments"
 
 
@@ -42,7 +50,7 @@ class ArgsAbstract(ABC):
 ArgsT = TypeVar("ArgsT", bound=ArgsAbstract)
 
 
-class RecipeModelAbstract(Generic[ArgsT], ABC):
+class FunctionModelAbstract(Generic[ArgsT], ABC):
     """
     Modelification for Transform.
 
@@ -89,28 +97,28 @@ class RecipeModelAbstract(Generic[ArgsT], ABC):
             confeti (dict[str, Any]): The Confeti dictionary.
 
         Returns:
-            RecipeModelAbstract: The transformation function object created from the Confeti dictionary.
+            FunctionModelAbstract: The transformation function object created from the Confeti dictionary.
         """
         try:
-            function_name = confeti[RECIPE]
+            function_name = confeti[FUNCTION]
             arguments_dict = confeti[ARGUMENTS]
             arguments = cls.args_concrete.from_confeti(confeti=arguments_dict)
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         return cls(function=function_name, arguments=arguments)
 
 
-class RecipeModelPyspark(RecipeModelAbstract[ArgsAbstract], ABC):
+class FunctionModelPyspark(FunctionModelAbstract[ArgsAbstract], ABC):
     """
     A concrete implementation of transformation functions using PySpark.
     """
 
 
-RecipeModelT = TypeVar("RecipeModelT", bound=RecipeModelAbstract)
+FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModelAbstract)
 
 
-class RecipeAbstract(Generic[RecipeModelT], ABC):
+class FunctionAbstract(Generic[FunctionModelT], ABC):
     """
     Modelification for Transform.
 
@@ -119,9 +127,9 @@ class RecipeAbstract(Generic[RecipeModelT], ABC):
         arguments (AbstractArgs): arguments to pass to the function.
     """
 
-    model_concrete: type[RecipeModelT]
+    model_concrete: type[FunctionModelT]
 
-    def __init__(self, model: RecipeModelT) -> None:
+    def __init__(self, model: FunctionModelT) -> None:
         """
         Initialize a CastTransform object.
 
@@ -132,11 +140,11 @@ class RecipeAbstract(Generic[RecipeModelT], ABC):
         self.callable_ = self.transform()
 
     @property
-    def model(self) -> RecipeModelT:
+    def model(self) -> FunctionModelT:
         return self._model
 
     @model.setter
-    def model(self, value: RecipeModelT) -> None:
+    def model(self, value: FunctionModelT) -> None:
         self._model = value
 
     @property
@@ -160,58 +168,17 @@ class RecipeAbstract(Generic[RecipeModelT], ABC):
             confeti (dict[str, Any]): The dictionary.
 
         Returns:
-            RecipeAbstract: model
+            FunctionAbstract: model
         """
         model = cls.model_concrete.from_confeti(confeti=confeti)
         return cls(model=model)
 
 
-class RecipePyspark(RecipeAbstract[RecipeModelT], ABC):
+class FunctionPyspark(FunctionAbstract[FunctionModelT], ABC):
     """
     A concrete implementation of transformation functions using PySpark.
-
-    This class serves as the base for all transformation recipes that use PySpark.
-    Recipes are reusable transformation components that can be applied to
-    dataframes in the ingestion framework.
     """
 
     @abstractmethod
     def transform(self) -> Callable:
-        """
-        Define the transformation to be applied.
-
-        Returns:
-            Callable: A callable that implements the transformation logic
-        """
-
-    @classmethod
-    @abstractmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> "RecipePyspark":
-        """
-        Create a recipe instance from configuration.
-
-        Each recipe subclass must implement this method to parse its specific
-        configuration parameters.
-
-        Args:
-            confeti (dict[str, Any]): The recipe configuration
-
-        Returns:
-            RecipePyspark: An initialized recipe instance
-
-        Raises:
-            NotImplementedError: If not implemented in a subclass
-        """
-
-
-class RecipePysparkRegistry(RegistrySingleton):
-    """
-    A singleton registry specifically for PySpark transformation recipes.
-
-    This registry stores PySpark recipe classes and provides methods for creating
-    recipe instances from configuration. It inherits common registry functionality
-    from RegistrySingleton.
-    """
-
-
-recipe_registry = RecipePysparkRegistry()
+        """TODO"""

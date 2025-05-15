@@ -1,9 +1,17 @@
 """
-Job orchestration and execution for the ingestion framework.
+Job class.
 
-This module provides classes and functions for defining, configuring, and executing
-data ingestion jobs that coordinate extraction, transformation, and loading operations
-within the ingestion framework.
+
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
+
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
 
 from abc import ABC, abstractmethod
@@ -14,11 +22,12 @@ from typing import Any, Final, Generic, Self
 from pyspark.sql.streaming.query import StreamingQuery
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.extract import extract_registry
 from ingestion_framework.extract.base import ExtractAbstract, ExtractModelAbstract
-from ingestion_framework.load import load_registry
+from ingestion_framework.extract.factory import ExtractContextAbstract, ExtractContextPyspark
 from ingestion_framework.load.base import LoadAbstract, LoadModelAbstract
+from ingestion_framework.load.factory import LoadContextAbstract, LoadContextPyspark
 from ingestion_framework.transforms.base import (
+    FunctionAbstract,
     TransformAbstract,
     TransformModelAbstract,
     TransformPyspark,
@@ -40,34 +49,28 @@ class Engine(Enum):
 
 class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     """
-    Abstract base class for ETL job execution.
-
-    This class defines the structure and flow for Extract, Transform, Load (ETL) jobs,
-    providing a framework for concrete ETL implementations. It handles configurations
-    for various data processing stages and orchestrates their execution.
-
-    The job follows a generic approach that can work with different dataframe types
-    and streaming query implementations through type parameters.
-
-    Generic Parameters:
-        DataFrameT: The type of DataFrame used in the ETL process (e.g., Pandas DataFrame, Spark DataFrame).
-        StreamingQueryT: The type of streaming query returned by streaming operations.
+    Job class to perform data extraction, transformations and loading (ETL).
     """
 
+    extract_concrete: type[ExtractContextAbstract]
     transform_concrete: type[TransformAbstract]
+    load_concrete: type[LoadContextAbstract]
 
     def __init__(
         self,
         engine: Engine,
         extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]],
-        transforms: list[TransformAbstract[TransformModelAbstract, DataFrameT]],
+        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
         loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]],
     ) -> None:
         """
-        Initialize a job in the ingestion framework.
+        Initialize Job instance.
 
-        This constructor sets up a data processing job with the specified components for data extraction,
-        transformation, and loading.
+        Args:
+            engine (OptionsEngine): Engine type.
+            extracts (list[ExtractAbstract]): Extract modelifications.
+            transforms (list[TransformAbstract]): Transform modelifications.
+            loads (list[LoadAbstract]): Load modelifications.
         """
         self.engine = engine
         self.extracts = extracts
@@ -76,12 +79,6 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
     @property
     def engine(self) -> Engine:
-        """
-        Get the engine type for the job.
-
-        Returns:
-            Engine: The engine type.
-        """
         return self._engine
 
     @engine.setter
@@ -90,12 +87,6 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
     @property
     def extracts(self) -> list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]:
-        """
-        Get the list of extract configurations.
-
-        Returns:
-            list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]: The list of extract configurations.
-        """
         return self._extracts
 
     @extracts.setter
@@ -103,28 +94,15 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self._extracts = value
 
     @property
-    def transforms(self) -> list[TransformAbstract[TransformModelAbstract, DataFrameT]]:
-        """
-        Get the list of transform configurations.
-
-        Returns:
-            list[TransformAbstract[TransformModelAbstract, DataFrameT]]:
-                The list of transform configurations.
-        """
+    def transforms(self) -> list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
         return self._transforms
 
     @transforms.setter
-    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, DataFrameT]]) -> None:
+    def transforms(self, value: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]) -> None:
         self._transforms = value
 
     @property
     def loads(self) -> list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]:
-        """
-        Returns the list of load objects associated with this job.
-
-        Returns:
-            list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]: A list of load objects.
-        """
         return self._loads
 
     @loads.setter
@@ -147,7 +125,8 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
             extracts: list[ExtractAbstract] = []
             for extract_confeti in confeti[EXTRACTS]:
-                extract = extract_registry.create_extract(confeti=extract_confeti)
+                extract_strategy = cls.extract_concrete.factory(confeti=extract_confeti)
+                extract = extract_strategy.from_confeti(confeti=extract_confeti)
                 extracts.append(extract)
 
             transforms: list[TransformAbstract] = []
@@ -157,10 +136,11 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
             loads: list[LoadAbstract] = []
             for load_confeti in confeti[LOADS]:
-                load = load_registry.create_load(confeti=load_confeti)
+                load_strategy = cls.load_concrete.factory(confeti=load_confeti)
+                load = load_strategy.from_confeti(confeti=load_confeti)
                 loads.append(load)
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         return cls(engine=engine, transforms=transforms, extracts=extracts, loads=loads)
 
@@ -206,14 +186,12 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
 class JobPyspark(JobAbstract):
     """
-    PySpark implementation of the ETL job.
-
-    This class provides a concrete implementation of the JobAbstract class for
-    PySpark-based data processing. It sets up appropriate context classes for
-    extraction, transformation, and loading operations in a PySpark environment.
+    TODO
     """
 
+    extract_concrete = ExtractContextPyspark
     transform_concrete = TransformPyspark
+    load_concrete = LoadContextPyspark
 
     def execute(self) -> None:
         """
@@ -260,13 +238,12 @@ class Job:
             JobModelAbstract: The JobModel instance created from the Confeti dictionary.
 
         Raises:
-            DictKeyError: If a required key is missing in the Confeti dictionary.
             NotImplementedError: If the options value is not recognized or not supported.
         """
         try:
             engine = Engine(value=confeti[ENGINE])
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         if engine == Engine.PYSPARK:
             return JobPyspark.from_confeti(confeti=confeti)

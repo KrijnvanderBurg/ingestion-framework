@@ -1,9 +1,17 @@
 """
-Base classes for data loading operations.
+TODO
 
-This module provides abstract and concrete base classes for defining data
-loading operations in the ingestion framework. It implements interfaces and models
-for loading data to various destinations with different formats and execution modes.
+
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
+
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
 
 import json
@@ -15,7 +23,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameRegistrySingleton, DataFrameT, StreamingQueryT
+from ingestion_framework.types import DataFrameT, RegistrySingleton, StreamingQueryT
 from ingestion_framework.utils.spark_handler import SparkHandler
 
 NAME: Final[str] = "name"
@@ -174,12 +182,6 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
     @property
     def schema_location(self) -> str | None:
-        """
-        Get the schema location.
-
-        Returns:
-            str | None: The schema location or None if no schema location is set.
-        """
         return self._schema_location
 
     @schema_location.setter
@@ -188,13 +190,6 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
     @property
     def options(self) -> dict[str, str]:
-        """
-        Method to retrieve the options dictionary.
-
-        Returns:
-            dict[str, str]: A dictionary containing options for the loader,
-                            where keys are option names and values are option values as strings.
-        """
         return self._options
 
     @options.setter
@@ -207,22 +202,11 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
 
 class LoadModelFileAbstract(LoadModelAbstract):
-    """
-    Abstract model class for file-based data loading.
-
-    This class defines the interface for models that represent file-based data loading
-    configurations, extending the base load model with file-specific properties.
-    """
+    """TODO"""
 
 
 class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
-    """
-    PySpark-specific implementation of file-based load model.
-
-    This class provides a concrete implementation of the file-based load model
-    for PySpark, handling configuration details for writing data to file-based
-    destinations using PySpark's DataFrame writer.
-    """
+    """TODO"""
 
     def __init__(
         self,
@@ -261,12 +245,6 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
 
     @property
     def mode(self) -> LoadMode:
-        """
-        Get the current load mode.
-
-        Returns:
-            LoadMode: The mode used for loading data.
-        """
         return self._mode
 
     @mode.setter
@@ -275,13 +253,6 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
 
     @property
     def data_format(self) -> LoadFormat:
-        """
-        Get the data format that this loader uses.
-
-        Returns:
-            LoadFormat: The format used by this loader, which specifies how data should be formatted
-            for loading.
-        """
         return self._data_format
 
     @data_format.setter
@@ -310,7 +281,7 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
             schema_location = confeti.get(SCHEMA_LOCATION, None)
             options = confeti.get(OPTIONS, {})
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=confeti)
 
         return cls(
             name=name,
@@ -334,7 +305,7 @@ class LoadAbstract(Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC):
 
     def __init__(self, model: LoadModelT) -> None:
         self.model = model
-        self.data_registry = DataFrameRegistrySingleton()
+        self.data_registry = RegistrySingleton()
 
     @property
     def model(self) -> LoadModelT:
@@ -345,11 +316,11 @@ class LoadAbstract(Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC):
         self._model = value
 
     @property
-    def data_registry(self) -> DataFrameRegistrySingleton:
+    def data_registry(self) -> RegistrySingleton:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: DataFrameRegistrySingleton) -> None:
+    def data_registry(self, value: RegistrySingleton) -> None:
         self._data_registry = value
 
     @classmethod

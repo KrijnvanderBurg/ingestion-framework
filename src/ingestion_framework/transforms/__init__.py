@@ -1,21 +1,12 @@
 """
-Data transformation package for the ingestion framework.
+==============================================================================
+Copyright Krijn van der Burg. All rights reserved.
 
-This package provides functionality for transforming data during the ingestion process.
-It includes abstract base classes and implementations for various transformation operations
-using a registry pattern for transformation recipes.
+This software is proprietary and confidential. No reproduction, distribution,
+or transmission is allowed without prior written permission. Unauthorized use,
+disclosure, or distribution is strictly prohibited.
+
+For inquiries and permission requests, contact Krijn van der Burg at
+krijnvdburg@protonmail.com.
+==============================================================================
 """
-
-from ingestion_framework.transforms.base import TransformAbstract, TransformPyspark
-from ingestion_framework.transforms.recipes.base import RecipePyspark, recipe_registry
-
-# Explicitly import recipe implementations to ensure they're registered
-from ingestion_framework.transforms.recipes.select_columns import SelectColumnsRecipePyspark
-
-__all__ = [
-    "TransformAbstract",
-    "TransformPyspark",
-    "RecipePyspark",
-    "recipe_registry",
-    "SelectColumnsRecipePyspark",
-]
