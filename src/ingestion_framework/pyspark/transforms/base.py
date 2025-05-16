@@ -10,7 +10,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract, FunctionPyspark
 from ingestion_framework.pyspark.transforms.functions.pyspark.select import SelectFunctionPyspark
-from ingestion_framework.types import DataFrameRegistry, DataFrameT
+from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
 
 FUNCTIONS: Final[str] = "functions"
 FUNCTION: Final[str] = "function"
@@ -117,7 +117,7 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
     def __init__(self, model: TransformModelT, functions: list[FunctionT]) -> None:
         self.model = model
         self.functions = functions
-        self.data_registry = DataFrameRegistry()
+        self.data_registry = DataFramePysparkRegistry()
 
     @property
     def model(self) -> TransformModelT:
@@ -136,11 +136,11 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
         self._functions = value
 
     @property
-    def data_registry(self) -> DataFrameRegistry:
+    def data_registry(self) -> DataFramePysparkRegistry:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: DataFrameRegistry) -> None:
+    def data_registry(self, value: DataFramePysparkRegistry) -> None:
         self._data_registry = value
 
     @classmethod

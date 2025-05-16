@@ -7,7 +7,7 @@ from pyspark.sql import functions as F
 
 from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
 from ingestion_framework.pyspark.transforms.registry import register_recipe
-from ingestion_framework.types import DataFrameRegistry
+from ingestion_framework.types import DataFramePysparkRegistry
 
 
 @register_recipe("filter_data")
@@ -45,12 +45,12 @@ class FilterDataRecipe(RecipePyspark):
 
         return cls(column=column, operator=operator, value=value)
 
-    def callable_(self, dataframe_registry: DataFrameRegistry, dataframe_name: str) -> None:
+    def callable_(self, dataframe_registry: DataFramePysparkRegistry, dataframe_name: str) -> None:
         """
         Filter rows in the dataframe.
 
         Args:
-            dataframe_registry (DataFrameRegistry): Registry containing dataframes
+            dataframe_registry (DataFramePysparkRegistry): Registry containing dataframes
             dataframe_name (str): Name of the dataframe to transform
         """
         df = dataframe_registry[dataframe_name]

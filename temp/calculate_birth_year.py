@@ -10,7 +10,7 @@
 # from pyspark.sql import functions as F
 
 # from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
-# from ingestion_framework.types import DataFrameRegistry
+# from ingestion_framework.types import DataFramePysparkRegistry
 
 
 # class CalculateBirthYearRecipe(RecipePyspark):
@@ -60,12 +60,12 @@
 #         age_column = self.age_column
 #         birth_year_column = self.birth_year_column
 
-#         def __f(dataframe_registry: DataFrameRegistry, dataframe_name: str) -> None:
+#         def __f(dataframe_registry: DataFramePysparkRegistry, dataframe_name: str) -> None:
 #             """
 #             Apply the birth year calculation to the dataframe.
 
 #             Args:
-#                 dataframe_registry (DataFrameRegistry): Registry containing dataframes
+#                 dataframe_registry (DataFramePysparkRegistry): Registry containing dataframes
 #                 dataframe_name (str): Name of the dataframe to transform
 #             """
 #             df = dataframe_registry[dataframe_name]

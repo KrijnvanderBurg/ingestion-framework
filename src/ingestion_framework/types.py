@@ -64,5 +64,5 @@ class RegistrySingleton(Registry, metaclass=SingletonType):
     pass
 
 
-class DataFrameRegistry(RegistrySingleton):
+class DataFramePysparkRegistry(RegistrySingleton):
     pass
