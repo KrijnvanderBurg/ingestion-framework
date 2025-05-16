@@ -62,3 +62,7 @@ class Registry:
 
 class RegistrySingleton(Registry, metaclass=SingletonType):
     pass
+
+
+class DataFrameRegistry(RegistrySingleton):
+    pass

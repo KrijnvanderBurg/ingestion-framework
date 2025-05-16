@@ -11,7 +11,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameT, RegistrySingleton, StreamingQueryT
+from ingestion_framework.types import DataFrameRegistry, DataFrameT, StreamingQueryT
 from ingestion_framework.utils.spark_handler import SparkHandler
 
 NAME: Final[str] = "name"
@@ -293,7 +293,7 @@ class LoadAbstract(Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC):
 
     def __init__(self, model: LoadModelT) -> None:
         self.model = model
-        self.data_registry = RegistrySingleton()
+        self.data_registry = DataFrameRegistry()
 
     @property
     def model(self) -> LoadModelT:
@@ -304,11 +304,11 @@ class LoadAbstract(Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC):
         self._model = value
 
     @property
-    def data_registry(self) -> RegistrySingleton:
+    def data_registry(self) -> DataFrameRegistry:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: RegistrySingleton) -> None:
+    def data_registry(self, value: DataFrameRegistry) -> None:
         self._data_registry = value
 
     @classmethod

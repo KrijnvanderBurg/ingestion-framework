@@ -11,7 +11,7 @@
 # from pyspark.sql import functions as F
 
 # from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
-# from ingestion_framework.types import RegistrySingleton
+# from ingestion_framework.types import DataFrameRegistry
 
 
 # class AddIngestionDatetimeRecipe(RecipePyspark):
@@ -43,12 +43,12 @@
 #         """
 #         column_name = self.column_name
 
-#         def __f(dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
+#         def __f(dataframe_registry: DataFrameRegistry, dataframe_name: str) -> None:
 #             """
 #             Add an ingestion datetime column to the dataframe.
 
 #             Args:
-#                 dataframe_registry (RegistrySingleton): The registry containing DataFrames.
+#                 dataframe_registry (DataFrameRegistry): The registry containing DataFrames.
 #                 dataframe_name (str): The name of the DataFrame in the registry.
 #             """
 #             df: DataFramePyspark = dataframe_registry[dataframe_name]

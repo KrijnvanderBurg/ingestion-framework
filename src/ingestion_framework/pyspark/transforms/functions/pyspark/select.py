@@ -19,7 +19,7 @@ from ingestion_framework.pyspark.transforms.functions.base import (
     FunctionModelT,
     FunctionPyspark,
 )
-from ingestion_framework.types import RegistrySingleton
+from ingestion_framework.types import DataFrameRegistry
 
 COLUMNS: Final[str] = "columns"
 
@@ -132,7 +132,7 @@ class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], 
             ```
         """
 
-        def f(dataframe_registry: RegistrySingleton, dataframe_name: str) -> None:
+        def f(dataframe_registry: DataFrameRegistry, dataframe_name: str) -> None:
             dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(
                 *self.model.arguments.columns
             )

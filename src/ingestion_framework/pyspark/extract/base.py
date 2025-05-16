@@ -12,7 +12,7 @@ from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.types import StructType
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFrameT, RegistrySingleton
+from ingestion_framework.types import DataFrameRegistry, DataFrameT
 from ingestion_framework.utils.schema_handler import SchemaHandlerPyspark
 from ingestion_framework.utils.spark_handler import SparkHandler
 
@@ -174,7 +174,7 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
 
     def __init__(self, model: ExtractModelT) -> None:
         self.model = model
-        self.data_registry = RegistrySingleton()
+        self.data_registry = DataFrameRegistry()
 
     @property
     def model(self) -> ExtractModelT:
@@ -185,11 +185,11 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
         self._model = value
 
     @property
-    def data_registry(self) -> RegistrySingleton:
+    def data_registry(self) -> DataFrameRegistry:
         return self._data_registry
 
     @data_registry.setter
-    def data_registry(self, value: RegistrySingleton) -> None:
+    def data_registry(self, value: DataFrameRegistry) -> None:
         self._data_registry = value
 
     @classmethod
