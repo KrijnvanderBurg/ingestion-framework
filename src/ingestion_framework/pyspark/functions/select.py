@@ -1,6 +1,5 @@
 """
 Column transform function.
-
 """
 
 from abc import ABC
@@ -97,9 +96,6 @@ class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], 
         """
         Selects columns with aliases.
 
-        Args:
-            columns (Ordereddict[str, Any]): Ordered mapping of column names to aliases.
-
         Returns:
             (Callable): Function for `DataFrame.transform()`.
 
@@ -126,9 +122,9 @@ class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], 
             ```
         """
 
-        def f(dataframe_registry: DataFramePysparkRegistry, dataframe_name: str) -> None:
+        def __f(dataframe_registry: DataFramePysparkRegistry, dataframe_name: str) -> None:
             dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(
                 *self.model.arguments.columns
             )
 
-        return f
+        return __f
