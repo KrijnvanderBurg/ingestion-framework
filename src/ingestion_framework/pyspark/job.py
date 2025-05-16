@@ -5,7 +5,7 @@ Job class.
 from ingestion_framework.job import JobAbstract
 from ingestion_framework.pyspark.extract import ExtractContextPyspark
 from ingestion_framework.pyspark.load import LoadContextPyspark
-from ingestion_framework.pyspark.transforms.base import TransformPyspark
+from ingestion_framework.pyspark.transform import TransformPyspark
 
 
 class JobPyspark(JobAbstract):

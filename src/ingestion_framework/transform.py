@@ -5,16 +5,12 @@ TODO
 from abc import ABC
 from typing import Any, Final, Generic, Self, TypeVar
 
-from pyspark.sql import DataFrame as DataFramePyspark
-
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract, FunctionPyspark
-from ingestion_framework.pyspark.transforms.functions.pyspark.select import SelectFunctionPyspark
+from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract
 from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
 
 FUNCTIONS: Final[str] = "functions"
 FUNCTION: Final[str] = "function"
-
 
 NAME: Final[str] = "name"
 UPSTREAM_NAME: Final[str] = "upstream_name"
@@ -89,21 +85,6 @@ class TransformModelAbstract(ABC):
         return cls(name=name, upstream_name=upstream_name)
 
 
-class TransformModelPyspark(TransformModelAbstract):
-    """
-    Modelification for PySpark data transformation.
-
-    Examples:
-        >>> df = spark.createDataFrame(data=[("Alice", 27), ("Bob", 32),], schema=["name", "age"])
-        >>> dict = {"function": "cast", "arguments": {"columns": {"age": "StringType",}}}
-        >>> transform = TransformFunction.from_dict(dict=dict[str, Any])
-        >>> df = df.transform(func=transform).printSchema()
-        root
-        |-- name: string (nullable = true)
-        |-- age: string (nullable = true)
-    """
-
-
 TransformModelT = TypeVar("TransformModelT", bound=TransformModelAbstract)
 FunctionT = TypeVar("FunctionT", bound=FunctionAbstract)
 
@@ -168,14 +149,3 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
         """
         for function in self.functions:
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
-
-
-class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
-    """
-    Concrete implementation for PySpark DataFrame transformion.
-    """
-
-    load_model_concrete = TransformModelPyspark
-    SUPPORTED_FUNCTIONS: dict[str, Any] = {
-        "select": SelectFunctionPyspark,
-    }
