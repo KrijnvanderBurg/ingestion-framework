@@ -8,13 +8,11 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Final, Generic, Self, TypeVar
 
-from pyspark.sql import DataFrame as DataFramePyspark
 from pyspark.sql.types import StructType
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
 from ingestion_framework.utils.schema_handler import SchemaHandlerPyspark
-from ingestion_framework.utils.spark_handler import SparkHandler
 
 NAME: Final[str] = "name"
 METHOD: Final[str] = "method"
@@ -159,7 +157,7 @@ class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
             options = confeti[OPTIONS]
             schema = SchemaHandlerPyspark.schema_factory(schema=confeti[SCHEMA])
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(name=name, method=method, data_format=data_format, location=location, options=options, schema=schema)
 
@@ -208,22 +206,29 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
     def extract(self) -> None: ...
 
 
-class ExtractPyspark(ExtractAbstract[ExtractModelPyspark, DataFramePyspark], ABC):
-    """
-    Concrete implementation for PySpark DataFrame extraction.
-    """
+class ExtractContextAbstract(ABC):
+    """Extract abstract class."""
 
-    # extract_model_concrete = ExtractModelPyspark
+    strategy: dict[ExtractFormat, type[ExtractAbstract]]
 
-    def extract(self) -> None:
+    @classmethod
+    def factory(cls, confeti: dict[str, Any]) -> type[ExtractAbstract]:
         """
-        Main extraction method.
-        """
-        SparkHandler().add_configs(options=self.model.options)
+        Get an extract instance based on the extract modelification using the strategy pattern.
 
-        if self.model.method == ExtractMethod.BATCH:
-            self.data_registry[self.model.name] = self._extract_batch()
-        elif self.model.method == ExtractMethod.STREAMING:
-            self.data_registry[self.model.name] = self._extract_streaming()
-        else:
-            raise ValueError(f"Extraction method {self.model.method} is not supported for Pyspark.")
+        Args:
+            confeti (dict[str, Any]): confeti.
+
+        Returns:
+            DataFramePyspark: An instance of a data extract.
+
+        Raises:
+            NotImplementedError: If the modelified extract format is not supported.
+        """
+
+        extract_strategy = ExtractFormat(confeti[DATA_FORMAT])
+
+        if extract_strategy not in cls.strategy.keys():
+            raise NotImplementedError(f"Extract format {extract_strategy.value} is not supported.")
+
+        return cls.strategy[extract_strategy]

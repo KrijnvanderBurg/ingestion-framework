@@ -1,19 +1,44 @@
 """
-TODO"""
+TODO
+"""
 
 from abc import ABC
-from typing import Generic
+from typing import Any, Generic
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
-from ingestion_framework.pyspark.extract.base import (
+from ingestion_framework.extract import (
     ExtractAbstract,
+    ExtractContextAbstract,
+    ExtractFormat,
+    ExtractMethod,
     ExtractModelFilePyspark,
+    ExtractModelPyspark,
     ExtractModelT,
-    ExtractPyspark,
 )
 from ingestion_framework.types import DataFrameT
 from ingestion_framework.utils.spark_handler import SparkHandler
+
+
+class ExtractPyspark(ExtractAbstract[ExtractModelPyspark, DataFramePyspark]):
+    """
+    Concrete implementation for PySpark DataFrame extraction.
+    """
+
+    # extract_model_concrete = ExtractModelPyspark
+
+    def extract(self) -> None:
+        """
+        Main extraction method.
+        """
+        SparkHandler().add_configs(options=self.model.options)
+
+        if self.model.method == ExtractMethod.BATCH:
+            self.data_registry[self.model.name] = self._extract_batch()
+        elif self.model.method == ExtractMethod.STREAMING:
+            self.data_registry[self.model.name] = self._extract_streaming()
+        else:
+            raise ValueError(f"Extraction method {self.model.method} is not supported for Pyspark.")
 
 
 class ExtractFileAbstract(ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC):
@@ -50,3 +75,15 @@ class ExtractFilePyspark(ExtractFileAbstract[ExtractModelFilePyspark, DataFrameP
             schema=self.model.schema,
             **self.model.options,
         )
+
+
+class ExtractContextPyspark(ExtractContextAbstract):
+    """
+    TODO
+    """
+
+    strategy: dict[ExtractFormat, type[ExtractAbstract[Any, Any]]] = {
+        ExtractFormat.PARQUET: ExtractFilePyspark,
+        ExtractFormat.JSON: ExtractFilePyspark,
+        ExtractFormat.CSV: ExtractFilePyspark,
+    }

@@ -10,10 +10,9 @@ from typing import Any, Final, Generic, Self
 from pyspark.sql.streaming.query import StreamingQuery
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.pyspark.extract.base import ExtractAbstract, ExtractModelAbstract
-from ingestion_framework.pyspark.extract.factory import ExtractContextAbstract, ExtractContextPyspark
-from ingestion_framework.pyspark.load.base import LoadAbstract, LoadModelAbstract
-from ingestion_framework.pyspark.load.factory import LoadContextAbstract, LoadContextPyspark
+from ingestion_framework.extract import ExtractAbstract, ExtractContextAbstract, ExtractModelAbstract
+from ingestion_framework.pyspark.extract import ExtractContextPyspark
+from ingestion_framework.pyspark.load import LoadAbstract, LoadContextAbstract, LoadContextPyspark, LoadModelAbstract
 from ingestion_framework.pyspark.transforms.base import (
     FunctionAbstract,
     TransformAbstract,
@@ -128,7 +127,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
                 load = load_strategy.from_confeti(confeti=load_confeti)
                 loads.append(load)
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(engine=engine, transforms=transforms, extracts=extracts, loads=loads)
 
@@ -231,7 +230,7 @@ class Job:
         try:
             engine = Engine(value=confeti[ENGINE])
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         if engine == Engine.PYSPARK:
             return JobPyspark.from_confeti(confeti=confeti)
