@@ -218,6 +218,12 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
     def extract(self) -> None: ...
 
 
+class ExtractFileAbstract(ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC):
+    """
+    Abstract class for file extraction.
+    """
+
+
 class ExtractContextAbstract(ABC):
     """Extract context abstract class for handling extraction strategies."""
 
@@ -239,7 +245,7 @@ class ExtractContextAbstract(ABC):
             extract_format = ExtractFormat(confeti[DATA_FORMAT])
             return ExtractRegistry.get(extract_format)
         except KeyError as e:
-            raise NotImplementedError(f"Extract format {confeti.get(DATA_FORMAT, 'unknown')} is not supported.") from e
+            raise NotImplementedError(f"Extract format {confeti[DATA_FORMAT]} is not supported.") from e
 
 
 # Create a specific registry for Extract implementations
@@ -249,5 +255,3 @@ class ExtractRegistry(DecoratorRegistry[ExtractFormat, ExtractAbstract]):
 
     Maps ExtractFormat enum values to concrete ExtractAbstract implementations.
     """
-
-    pass

@@ -199,8 +199,6 @@ class JobRegistry(DecoratorRegistry[Engine, JobAbstract]):
     Maps Engine enum values to concrete JobAbstract implementations.
     """
 
-    pass
-
 
 # For backward compatibility with existing code
 class Job(JobAbstract):

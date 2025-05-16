@@ -87,6 +87,3 @@ class ExtractContextPyspark(ExtractContextAbstract):
 
     This class provides factory methods for creating PySpark extractors.
     """
-
-    # No need to define strategy dictionary anymore as we're using the decorator registry
-    pass
