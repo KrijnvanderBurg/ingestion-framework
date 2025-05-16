@@ -28,7 +28,7 @@ from ingestion_framework.pyspark.extract import ExtractContextPyspark
 from ingestion_framework.pyspark.load import LoadContextPyspark
 from ingestion_framework.pyspark.transform import TransformPyspark
 from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
-from ingestion_framework.types import DataFrameT, DecoratorRegistry, StreamingQueryT
+from ingestion_framework.types import DataFrameT, DecoratorRegistrySingleton, StreamingQueryT
 from ingestion_framework.utils.file_handler import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
@@ -192,7 +192,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
 
 # Create a registry for Job implementations
-class JobRegistry(DecoratorRegistry[Engine, JobAbstract]):
+class JobRegistry(DecoratorRegistrySingleton[Engine, JobAbstract]):
     """
     Registry for Job implementations.
 

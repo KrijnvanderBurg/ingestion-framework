@@ -60,20 +60,12 @@ class Registry:
         return iter(self._items.values())
 
 
-class RegistrySingleton(Registry, metaclass=SingletonType):
-    pass
-
-
-class DataFramePysparkRegistry(RegistrySingleton):
-    pass
-
-
 # Enhanced Decorator registry pattern implementation
 K = TypeVar("K")  # Key type
 T = TypeVar("T")  # Value type (class being registered)
 
 
-class DecoratorRegistry(Generic[K, T]):
+class DecoratorRegistrySingleton(Generic[K, T], Registry, metaclass=SingletonType):
     """
     A decorator registry that maps keys to classes.
     Used to implement a more flexible registry pattern with decorators.
@@ -83,7 +75,7 @@ class DecoratorRegistry(Generic[K, T]):
     represents the value type (the class being registered).
 
     Example:
-        class MyRegistry(DecoratorRegistry[str, MyBaseClass]):
+        class MyRegistry(DecoratorRegistrySingleton[str, MyBaseClass]):
             pass
 
         @MyRegistry.register("key1")
@@ -163,3 +155,7 @@ class DecoratorRegistry(Generic[K, T]):
             Dictionary mapping keys to lists of registered classes
         """
         return {k: v.copy() for k, v in cls._registry.items()}
+
+
+class DataFramePysparkRegistry(DecoratorRegistrySingleton[str, DataFramePyspark]):
+    pass

@@ -13,7 +13,7 @@ from ingestion_framework.functions import FunctionAbstract
 from ingestion_framework.types import (
     DataFramePysparkRegistry,
     DataFrameT,
-    DecoratorRegistry,
+    DecoratorRegistrySingleton,
 )
 
 FUNCTIONS: Final[str] = "functions"
@@ -166,7 +166,7 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
 
 
 # Create a registry for Transform implementations
-class TransformRegistry(DecoratorRegistry[str, TransformAbstract]):
+class TransformRegistry(DecoratorRegistrySingleton[str, TransformAbstract]):
     """
     Registry for Transform implementations.
 

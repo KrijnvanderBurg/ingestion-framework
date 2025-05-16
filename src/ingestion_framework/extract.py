@@ -15,7 +15,7 @@ from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.types import (
     DataFramePysparkRegistry,
     DataFrameT,
-    DecoratorRegistry,
+    DecoratorRegistrySingleton,
 )
 from ingestion_framework.utils.schema_handler import SchemaHandlerPyspark
 
@@ -249,7 +249,7 @@ class ExtractContextAbstract(ABC):
 
 
 # Create a specific registry for Extract implementations
-class ExtractRegistry(DecoratorRegistry[ExtractFormat, ExtractAbstract]):
+class ExtractRegistry(DecoratorRegistrySingleton[ExtractFormat, ExtractAbstract]):
     """
     Registry for Extract implementations.
 

@@ -12,7 +12,7 @@ from typing import Any, Final, Generic, Self, TypeVar
 from ingestion_framework.types import (
     DataFramePysparkRegistry,
     DataFrameT,
-    DecoratorRegistry,
+    DecoratorRegistrySingleton,
     StreamingQueryT,
 )
 
@@ -236,7 +236,7 @@ class LoadContextAbstract(ABC):
 
 
 # Create a specific registry for Load implementations - define after LoadAbstract to avoid circular imports
-class LoadRegistry(DecoratorRegistry[LoadFormat, LoadAbstract]):
+class LoadRegistry(DecoratorRegistrySingleton[LoadFormat, LoadAbstract]):
     """
     Registry for Load implementations.
 
