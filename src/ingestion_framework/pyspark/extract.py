@@ -39,14 +39,10 @@ class ExtractPyspark(ExtractAbstract[ExtractModelPyspark, DataFramePyspark]):
         elif self.model.method == ExtractMethod.STREAMING:
             self.data_registry[self.model.name] = self._extract_streaming()
         else:
-            raise ValueError(
-                f"Extraction method {self.model.method} is not supported for Pyspark."
-            )
+            raise ValueError(f"Extraction method {self.model.method} is not supported for Pyspark.")
 
 
-class ExtractFileAbstract(
-    ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC
-):
+class ExtractFileAbstract(ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC):
     """
     Abstract class for file extraction.
     """
@@ -55,9 +51,7 @@ class ExtractFileAbstract(
 @ExtractRegistry.register(ExtractFormat.PARQUET)
 @ExtractRegistry.register(ExtractFormat.JSON)
 @ExtractRegistry.register(ExtractFormat.CSV)
-class ExtractFilePyspark(
-    ExtractFileAbstract[ExtractModelFilePyspark, DataFramePyspark], ExtractPyspark
-):
+class ExtractFilePyspark(ExtractFileAbstract[ExtractModelFilePyspark, DataFramePyspark], ExtractPyspark):
     """
     Concrete class for file extraction using PySpark DataFrame.
     """

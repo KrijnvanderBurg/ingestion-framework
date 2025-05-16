@@ -239,9 +239,7 @@ class ExtractContextAbstract(ABC):
             extract_format = ExtractFormat(confeti[DATA_FORMAT])
             return ExtractRegistry.get(extract_format)
         except KeyError as e:
-            raise NotImplementedError(
-                f"Extract format {confeti.get(DATA_FORMAT, 'unknown')} is not supported."
-            ) from e
+            raise NotImplementedError(f"Extract format {confeti.get(DATA_FORMAT, 'unknown')} is not supported.") from e
 
 
 # Create a specific registry for Extract implementations

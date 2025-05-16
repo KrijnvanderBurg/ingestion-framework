@@ -34,9 +34,7 @@ class TransformModelPyspark(TransformModelAbstract):
 
 
 @TransformRegistry.register("default")
-class TransformPyspark(
-    TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC
-):
+class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
     """
     Concrete implementation for PySpark DataFrame transformion.
     """

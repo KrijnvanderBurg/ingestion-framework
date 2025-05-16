@@ -142,9 +142,7 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
             function_name: str = function_confeti[FUNCTION]
 
             if function_name not in cls.SUPPORTED_FUNCTIONS.keys():
-                raise NotImplementedError(
-                    f"{FUNCTION} {function_name} is not supported."
-                )
+                raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
 
             function_concrete: FunctionT = cls.SUPPORTED_FUNCTIONS[function_name]
             function_ = function_concrete.from_confeti(confeti=function_confeti)
@@ -160,15 +158,11 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
         under the transform's name, reading from the upstream_name.
         """
         # Copy the dataframe from upstream to current name
-        self.data_registry[self.model.name] = self.data_registry[
-            self.model.upstream_name
-        ]
+        self.data_registry[self.model.name] = self.data_registry[self.model.upstream_name]
 
         # Apply transformations
         for function in self.functions:
-            function.callable_(
-                dataframe_registry=self.data_registry, dataframe_name=self.model.name
-            )
+            function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
 
 
 # Create a registry for Transform implementations

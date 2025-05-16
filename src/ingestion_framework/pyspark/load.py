@@ -66,9 +66,7 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
             schema_location (str): URI that identifies where to load schema.
             options (dict[str, Any]): Options for the sink input.
         """
-        super().__init__(
-            name=name, upstream_name=upstream_name, method=method, location=location
-        )
+        super().__init__(name=name, upstream_name=upstream_name, method=method, location=location)
         self.schema_location = schema_location
         self.options = options
 
@@ -169,9 +167,7 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
         )
 
 
-class LoadPyspark(
-    LoadAbstract[LoadModelPyspark, DataFramePyspark, StreamingQueryPyspark], ABC
-):
+class LoadPyspark(LoadAbstract[LoadModelPyspark, DataFramePyspark, StreamingQueryPyspark], ABC):
     """
     Concrete implementation for PySpark DataFrame loadion.
     """
@@ -193,7 +189,7 @@ class LoadPyspark(
         load data with PySpark.
         """
         SparkHandler().add_configs(options=self.model.options)
-        
+
         # Copy the dataframe from upstream to current name
         self.data_registry[self.model.name] = self.data_registry[self.model.upstream_name]
 
@@ -202,9 +198,7 @@ class LoadPyspark(
         elif self.model.method == LoadMethod.STREAMING:
             self.data_registry[self.model.name] = self._load_streaming()
         else:
-            raise ValueError(
-                f"Loadion method {self.model.method} is not supported for Pyspark."
-            )
+            raise ValueError(f"Loadion method {self.model.method} is not supported for Pyspark.")
 
         self._load_schema()
 

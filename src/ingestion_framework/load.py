@@ -232,9 +232,7 @@ class LoadContextAbstract(ABC):
             load_format = LoadFormat(confeti[DATA_FORMAT])
             return LoadRegistry.get(load_format)
         except KeyError as e:
-            raise NotImplementedError(
-                f"Load format {confeti.get(DATA_FORMAT, 'unknown')} is not supported."
-            ) from e
+            raise NotImplementedError(f"Load format {confeti.get(DATA_FORMAT, 'unknown')} is not supported.") from e
 
 
 # Create a specific registry for Load implementations - define after LoadAbstract to avoid circular imports

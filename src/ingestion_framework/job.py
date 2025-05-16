@@ -56,9 +56,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         self,
         engine: Engine,
         extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]],
-        transforms: list[
-            TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]
-        ],
+        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
         loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]],
     ) -> None:
         """
@@ -88,9 +86,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         return self._extracts
 
     @extracts.setter
-    def extracts(
-        self, value: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]
-    ) -> None:
+    def extracts(self, value: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]) -> None:
         self._extracts = value
 
     @property
@@ -102,9 +98,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     @transforms.setter
     def transforms(
         self,
-        value: list[
-            TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]
-        ],
+        value: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
     ) -> None:
         self._transforms = value
 
@@ -115,9 +109,7 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         return self._loads
 
     @loads.setter
-    def loads(
-        self, value: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]
-    ) -> None:
+    def loads(self, value: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]) -> None:
         self._loads = value
 
     @classmethod
