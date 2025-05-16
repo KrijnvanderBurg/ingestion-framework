@@ -12,7 +12,9 @@ from sys import stdout
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 
 
-def set_logger(name: str, filename: str = "ingestion.log", level: int = logging.INFO) -> logging.Logger:
+def set_logger(
+    name: str, filename: str = "ingestion.log", level: int = logging.INFO
+) -> logging.Logger:
     """
     Configure the logging settings.
 

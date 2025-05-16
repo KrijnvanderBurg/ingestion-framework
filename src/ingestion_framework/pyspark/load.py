@@ -1,5 +1,7 @@
 """
-TODO
+PySpark implementation for data loading operations.
+
+This module provides concrete implementations for loading data using PySpark.
 """
 
 import json
@@ -27,6 +29,7 @@ from ingestion_framework.load import (
     LoadMode,
     LoadModelAbstract,
     LoadModelFileAbstract,
+    LoadRegistry,
 )
 from ingestion_framework.utils.spark_handler import SparkHandler
 
@@ -63,7 +66,9 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
             schema_location (str): URI that identifies where to load schema.
             options (dict[str, Any]): Options for the sink input.
         """
-        super().__init__(name=name, upstream_name=upstream_name, method=method, location=location)
+        super().__init__(
+            name=name, upstream_name=upstream_name, method=method, location=location
+        )
         self.schema_location = schema_location
         self.options = options
 
@@ -89,7 +94,7 @@ class LoadModelPyspark(LoadModelAbstract, ABC):
 
 
 class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
-    """TODO"""
+    """Model for file loading using PySpark."""
 
     def __init__(
         self,
@@ -102,19 +107,6 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
         schema_location: str | None,
         options: dict[str, str],
     ) -> None:
-        """
-        Initialize LoadModelAbstract with the modelified parameters.
-
-        Args:
-            name (str): ID of the sink modelification.
-            upstream_name (list[str]): ID of the sink modelification.
-            method (LoadMethod): Type of sink load mode.
-            mode (LoadMode): Type of sink mode.
-            data_format (LoadFormat): Format of the sink input.
-            location (str): URI that identifies where to load data in the modelified format.
-            schema_location (str): URI that identifies where to load schema.
-            options (dict[str, Any]): Options for the sink input.
-        """
         super().__init__(
             name=name,
             upstream_name=upstream_name,
@@ -145,15 +137,14 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        Create a LoadModelAbstract object from a Confeti dictionary.
+        Create a LoadModelFilePyspark object from a Confeti dictionary.
 
         Args:
             confeti (dict[str, Any]): The Confeti dictionary.
 
         Returns:
-            LoadModelAbstract: The LoadModelAbstract object created from the Confeti dictionary.
+            LoadModelFilePyspark: LoadModelFilePyspark object.
         """
-
         try:
             name = confeti[NAME]
             upstream_name = confeti[UPSTREAM_NAME]
@@ -178,40 +169,53 @@ class LoadModelFilePyspark(LoadModelFileAbstract, LoadModelPyspark):
         )
 
 
-class LoadPyspark(LoadAbstract[LoadModelPyspark, DataFramePyspark, StreamingQueryPyspark], ABC):
+class LoadPyspark(
+    LoadAbstract[LoadModelPyspark, DataFramePyspark, StreamingQueryPyspark], ABC
+):
     """
     Concrete implementation for PySpark DataFrame loadion.
     """
 
-    # load_model_concrete = LoadModelPyspark
-
     def _load_schema(self) -> None:
         """
-        Write schema to file.
+        load schema from DataFrame.
         """
-        if self.model.schema_location:
-            with open(file=self.model.schema_location, mode="w", encoding="utf-8") as file:
-                schema_json = self.data_registry[self.model.name].schema.json()
-                schema_dict = json.loads(schema_json)
-                json.dump(schema_dict, file)
+        if self.model.schema_location is None:
+            return
+
+        schema = json.dumps(self.data_registry[self.model.name].schema.jsonValue())
+
+        with open(self.model.schema_location, mode="w", encoding="utf-8") as f:
+            f.write(schema)
 
     def load(self) -> None:
         """
-        Main loadion method.
+        load data with PySpark.
         """
         SparkHandler().add_configs(options=self.model.options)
+        
+        # Copy the dataframe from upstream to current name
+        self.data_registry[self.model.name] = self.data_registry[self.model.upstream_name]
 
         if self.model.method == LoadMethod.BATCH:
             self._load_batch()
         elif self.model.method == LoadMethod.STREAMING:
             self.data_registry[self.model.name] = self._load_streaming()
         else:
-            raise ValueError(f"Loadion method {self.model.method} is not supported for Pyspark.")
+            raise ValueError(
+                f"Loadion method {self.model.method} is not supported for Pyspark."
+            )
 
         self._load_schema()
 
 
-class LoadFilePyspark(LoadFileAbstract[LoadModelFilePyspark, DataFramePyspark, StreamingQueryPyspark], LoadPyspark):
+@LoadRegistry.register(LoadFormat.PARQUET)
+@LoadRegistry.register(LoadFormat.JSON)
+@LoadRegistry.register(LoadFormat.CSV)
+class LoadFilePyspark(
+    LoadFileAbstract[LoadModelFilePyspark, DataFramePyspark, StreamingQueryPyspark],
+    LoadPyspark,
+):
     """
     Concrete class for file loadion using PySpark DataFrame.
     """
@@ -246,20 +250,10 @@ class LoadFilePyspark(LoadFileAbstract[LoadModelFilePyspark, DataFramePyspark, S
 
 class LoadContextPyspark(LoadContextAbstract):
     """
-    _summary_
+    PySpark implementation of loading context.
 
-    Args:
-        LoadContextAbstract (_type_): _description_
-
-    Raises:
-        NotImplementedError: _description_
-
-    Returns:
-        _type_: _description_
+    This class provides factory methods for creating PySpark loaders.
     """
 
-    strategy: dict[LoadFormat, type[LoadAbstract]] = {
-        LoadFormat.PARQUET: LoadFilePyspark,
-        LoadFormat.JSON: LoadFilePyspark,
-        LoadFormat.CSV: LoadFilePyspark,
-    }
+    # No need to define strategy dictionary anymore as we're using the decorator registry
+    pass

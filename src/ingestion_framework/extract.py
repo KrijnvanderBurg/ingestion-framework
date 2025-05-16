@@ -1,7 +1,8 @@
 """
-TODO
+Extract interface and implementations for various data formats.
 
-IO extract interface and strategy, extract implementations are in module ingestion_framework.pyspark.loads.
+This module provides abstract classes and implementations for data extraction
+from various sources and formats.
 """
 
 from abc import ABC, abstractmethod
@@ -11,7 +12,11 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql.types import StructType
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
+from ingestion_framework.types import (
+    DataFramePysparkRegistry,
+    DataFrameT,
+    DecoratorRegistry,
+)
 from ingestion_framework.utils.schema_handler import SchemaHandlerPyspark
 
 NAME: Final[str] = "name"
@@ -113,11 +118,11 @@ class ExtractModelPyspark(ExtractModelAbstract, ABC):
 
 
 class ExtractModelFileAbstract(ExtractModelAbstract, ABC):
-    """TODO"""
+    """Abstract class for file extraction models."""
 
 
 class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
-    """TODO"""
+    """Model for file extraction using PySpark."""
 
     def __init__(
         self,
@@ -140,13 +145,13 @@ class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        Create an ExtractModelAbstract object from a Confeti dictionary.
+        Create an ExtractModelFilePyspark object from a Confeti dictionary.
 
         Args:
             confeti (dict[str, Any]): The Confeti dictionary.
 
         Returns:
-            ExtractModelAbstract: The ExtractModelAbstract object created from the Confeti dictionary.
+            ExtractModelFilePyspark: The ExtractModelFilePyspark object created from the Confeti dictionary.
         """
 
         try:
@@ -159,7 +164,14 @@ class ExtractModelFilePyspark(ExtractModelFileAbstract, ExtractModelPyspark):
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
-        return cls(name=name, method=method, data_format=data_format, location=location, options=options, schema=schema)
+        return cls(
+            name=name,
+            method=method,
+            data_format=data_format,
+            location=location,
+            options=options,
+            schema=schema,
+        )
 
 
 ExtractModelT = TypeVar("ExtractModelT", bound=ExtractModelAbstract)
@@ -207,28 +219,37 @@ class ExtractAbstract(Generic[ExtractModelT, DataFrameT], ABC):
 
 
 class ExtractContextAbstract(ABC):
-    """Extract abstract class."""
-
-    strategy: dict[ExtractFormat, type[ExtractAbstract]]
+    """Extract context abstract class for handling extraction strategies."""
 
     @classmethod
     def factory(cls, confeti: dict[str, Any]) -> type[ExtractAbstract]:
         """
-        Get an extract instance based on the extract modelification using the strategy pattern.
+        Get an extract class based on the extract format using the decorator registry.
 
         Args:
-            confeti (dict[str, Any]): confeti.
+            confeti (dict[str, Any]): Configuration dictionary.
 
         Returns:
-            DataFramePyspark: An instance of a data extract.
+            Type[ExtractAbstract]: An extract implementation class.
 
         Raises:
-            NotImplementedError: If the modelified extract format is not supported.
+            NotImplementedError: If the specified extract format is not supported.
         """
+        try:
+            extract_format = ExtractFormat(confeti[DATA_FORMAT])
+            return ExtractRegistry.get(extract_format)
+        except KeyError as e:
+            raise NotImplementedError(
+                f"Extract format {confeti.get(DATA_FORMAT, 'unknown')} is not supported."
+            ) from e
 
-        extract_strategy = ExtractFormat(confeti[DATA_FORMAT])
 
-        if extract_strategy not in cls.strategy.keys():
-            raise NotImplementedError(f"Extract format {extract_strategy.value} is not supported.")
+# Create a specific registry for Extract implementations
+class ExtractRegistry(DecoratorRegistry[ExtractFormat, ExtractAbstract]):
+    """
+    Registry for Extract implementations.
 
-        return cls.strategy[extract_strategy]
+    Maps ExtractFormat enum values to concrete ExtractAbstract implementations.
+    """
+
+    pass

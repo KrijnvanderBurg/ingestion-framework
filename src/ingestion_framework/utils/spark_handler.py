@@ -15,7 +15,11 @@ logger: logging.Logger = set_logger(__name__)
 class SparkHandler(metaclass=SingletonType):
     # _session: SparkSession
 
-    def __init__(self, app_name: str = "ingestion_framework", options: dict[str, str] | None = None) -> None:
+    def __init__(
+        self,
+        app_name: str = "ingestion_framework",
+        options: dict[str, str] | None = None,
+    ) -> None:
         builder = SparkSession.Builder().appName(name=app_name)
 
         if options:

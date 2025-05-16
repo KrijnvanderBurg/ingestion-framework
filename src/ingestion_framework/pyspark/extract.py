@@ -1,9 +1,11 @@
 """
-TODO
+PySpark implementation for data extraction operations.
+
+This module provides concrete implementations for extracting data using PySpark.
 """
 
 from abc import ABC
-from typing import Any, Generic
+from typing import Generic
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
@@ -15,6 +17,7 @@ from ingestion_framework.extract import (
     ExtractModelFilePyspark,
     ExtractModelPyspark,
     ExtractModelT,
+    ExtractRegistry,
 )
 from ingestion_framework.types import DataFrameT
 from ingestion_framework.utils.spark_handler import SparkHandler
@@ -24,8 +27,6 @@ class ExtractPyspark(ExtractAbstract[ExtractModelPyspark, DataFramePyspark]):
     """
     Concrete implementation for PySpark DataFrame extraction.
     """
-
-    # extract_model_concrete = ExtractModelPyspark
 
     def extract(self) -> None:
         """
@@ -38,16 +39,25 @@ class ExtractPyspark(ExtractAbstract[ExtractModelPyspark, DataFramePyspark]):
         elif self.model.method == ExtractMethod.STREAMING:
             self.data_registry[self.model.name] = self._extract_streaming()
         else:
-            raise ValueError(f"Extraction method {self.model.method} is not supported for Pyspark.")
+            raise ValueError(
+                f"Extraction method {self.model.method} is not supported for Pyspark."
+            )
 
 
-class ExtractFileAbstract(ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC):
+class ExtractFileAbstract(
+    ExtractAbstract[ExtractModelT, DataFrameT], Generic[ExtractModelT, DataFrameT], ABC
+):
     """
     Abstract class for file extraction.
     """
 
 
-class ExtractFilePyspark(ExtractFileAbstract[ExtractModelFilePyspark, DataFramePyspark], ExtractPyspark):
+@ExtractRegistry.register(ExtractFormat.PARQUET)
+@ExtractRegistry.register(ExtractFormat.JSON)
+@ExtractRegistry.register(ExtractFormat.CSV)
+class ExtractFilePyspark(
+    ExtractFileAbstract[ExtractModelFilePyspark, DataFramePyspark], ExtractPyspark
+):
     """
     Concrete class for file extraction using PySpark DataFrame.
     """
@@ -79,11 +89,10 @@ class ExtractFilePyspark(ExtractFileAbstract[ExtractModelFilePyspark, DataFrameP
 
 class ExtractContextPyspark(ExtractContextAbstract):
     """
-    TODO
+    PySpark implementation of extraction context.
+
+    This class provides factory methods for creating PySpark extractors.
     """
 
-    strategy: dict[ExtractFormat, type[ExtractAbstract[Any, Any]]] = {
-        ExtractFormat.PARQUET: ExtractFilePyspark,
-        ExtractFormat.JSON: ExtractFilePyspark,
-        ExtractFormat.CSV: ExtractFilePyspark,
-    }
+    # No need to define strategy dictionary anymore as we're using the decorator registry
+    pass

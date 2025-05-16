@@ -1,12 +1,20 @@
 """
-TODO
+Load interface and implementations for various data formats.
+
+This module provides abstract classes and implementations for data loading
+to various destinations and formats.
 """
 
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Final, Generic, Self, TypeVar
 
-from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT, StreamingQueryT
+from ingestion_framework.types import (
+    DataFramePysparkRegistry,
+    DataFrameT,
+    DecoratorRegistry,
+    StreamingQueryT,
+)
 
 NAME: Final[str] = "name"
 UPSTREAM_NAME: Final[str] = "upstream_name"
@@ -127,7 +135,7 @@ class LoadModelAbstract(ABC):
 
 
 class LoadModelFileAbstract(LoadModelAbstract):
-    """TODO"""
+    """Abstract base class for file-based load models."""
 
 
 LoadModelT = TypeVar("LoadModelT", bound=LoadModelAbstract)
@@ -194,7 +202,9 @@ class LoadAbstract(Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC):
 
 
 class LoadFileAbstract(
-    LoadAbstract[LoadModelT, DataFrameT, StreamingQueryT], Generic[LoadModelT, DataFrameT, StreamingQueryT], ABC
+    LoadAbstract[LoadModelT, DataFrameT, StreamingQueryT],
+    Generic[LoadModelT, DataFrameT, StreamingQueryT],
+    ABC,
 ):
     """
     Abstract class for file loadion.
@@ -204,26 +214,35 @@ class LoadFileAbstract(
 class LoadContextAbstract(ABC):
     """Abstract class representing a strategy context for creating data loads."""
 
-    strategy: dict[LoadFormat, type[LoadAbstract]]
-
     @classmethod
     def factory(cls, confeti: dict[str, Any]) -> type[LoadAbstract]:
         """
-        Get a load instance based on the load modelification via strategy pattern.
+        Get a load class based on the load format using the decorator registry.
 
         Args:
-            confeti (dict[str, Any]): confeti.
+            confeti (dict[str, Any]): Configuration dictionary.
 
         Returns:
-            Load: An instance of a data load.
+            Type[LoadAbstract]: A load implementation class.
 
         Raises:
-            NotImplementedError: If the modelified load format is not implemented.
+            NotImplementedError: If the specified load format is not supported.
         """
+        try:
+            load_format = LoadFormat(confeti[DATA_FORMAT])
+            return LoadRegistry.get(load_format)
+        except KeyError as e:
+            raise NotImplementedError(
+                f"Load format {confeti.get(DATA_FORMAT, 'unknown')} is not supported."
+            ) from e
 
-        load_strategy = LoadFormat(confeti[DATA_FORMAT])
 
-        if load_strategy in cls.strategy.keys():
-            return cls.strategy[load_strategy]
+# Create a specific registry for Load implementations - define after LoadAbstract to avoid circular imports
+class LoadRegistry(DecoratorRegistry[LoadFormat, LoadAbstract]):
+    """
+    Registry for Load implementations.
 
-        raise NotImplementedError(f"Load format {load_strategy.value} is not supported. {type(load_strategy)}")
+    Maps LoadFormat enum values to concrete LoadAbstract implementations.
+    """
+
+    pass

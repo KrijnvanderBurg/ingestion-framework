@@ -1,5 +1,7 @@
 """
-TODO
+PySpark implementation for data transformation operations.
+
+This module provides concrete implementations for transforming data using PySpark.
 """
 
 from abc import ABC
@@ -9,7 +11,11 @@ from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.pyspark.function import FunctionPyspark
 from ingestion_framework.pyspark.functions.select import SelectFunctionPyspark
-from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
+from ingestion_framework.transform import (
+    TransformAbstract,
+    TransformModelAbstract,
+    TransformRegistry,
+)
 
 
 class TransformModelPyspark(TransformModelAbstract):
@@ -27,7 +33,10 @@ class TransformModelPyspark(TransformModelAbstract):
     """
 
 
-class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
+@TransformRegistry.register("default")
+class TransformPyspark(
+    TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC
+):
     """
     Concrete implementation for PySpark DataFrame transformion.
     """

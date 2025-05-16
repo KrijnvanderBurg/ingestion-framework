@@ -1,16 +1,21 @@
 """
-Job class.
+PySpark implementation of the Job class.
+
+This module provides concrete implementations for executing ETL jobs using PySpark.
 """
 
-from ingestion_framework.job import JobAbstract
+from ingestion_framework.job import Engine, JobAbstract, JobRegistry
 from ingestion_framework.pyspark.extract import ExtractContextPyspark
 from ingestion_framework.pyspark.load import LoadContextPyspark
 from ingestion_framework.pyspark.transform import TransformPyspark
 
 
+@JobRegistry.register(Engine.PYSPARK)
 class JobPyspark(JobAbstract):
     """
-    TODO
+    Concrete implementation of JobAbstract for PySpark.
+
+    This class provides PySpark-specific functionality for executing ETL jobs.
     """
 
     extract_concrete = ExtractContextPyspark
@@ -21,6 +26,11 @@ class JobPyspark(JobAbstract):
         """
         Extract data into a DataFrame, transform the DataFrame, then load the DataFrame.
         """
-        self._extract()
-        self._transform()
-        self._load()
+        for extract in self.extracts:
+            extract.extract()
+
+        for transform in self.transforms:
+            transform.transform()
+
+        for load in self.loads:
+            load.load()

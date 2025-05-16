@@ -10,7 +10,13 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.functions import ArgsAbstract, ArgsT, FunctionAbstract, FunctionModelAbstract, FunctionModelT
+from ingestion_framework.functions import (
+    ArgsAbstract,
+    ArgsT,
+    FunctionAbstract,
+    FunctionModelAbstract,
+    FunctionModelT,
+)
 from ingestion_framework.pyspark.function import FunctionPyspark
 from ingestion_framework.types import DataFramePysparkRegistry
 
@@ -59,7 +65,9 @@ class SelectFunctionModelPysparkArgs(SelectFunctionModelAbstract.Args):
         return cls(columns=columns)
 
 
-class SelectFunctionModelPyspark(SelectFunctionModelAbstract[SelectFunctionModelPysparkArgs]):
+class SelectFunctionModelPyspark(
+    SelectFunctionModelAbstract[SelectFunctionModelPysparkArgs]
+):
     """A concrete implementation of DataFrame Select functions using PySpark."""
 
     args_concrete = SelectFunctionModelPysparkArgs
@@ -78,7 +86,9 @@ class SelectFunctionAbstract(FunctionAbstract[FunctionModelT], ABC):
     """
 
 
-class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], FunctionPyspark):
+class SelectFunctionPyspark(
+    SelectFunctionAbstract[SelectFunctionModelPyspark], FunctionPyspark
+):
     """
     Encapsulates column transformation logic for PySpark DataFrames.
 
@@ -122,9 +132,11 @@ class SelectFunctionPyspark(SelectFunctionAbstract[SelectFunctionModelPyspark], 
             ```
         """
 
-        def __f(dataframe_registry: DataFramePysparkRegistry, dataframe_name: str) -> None:
-            dataframe_registry[dataframe_name] = dataframe_registry[dataframe_name].select(
-                *self.model.arguments.columns
-            )
+        def __f(
+            dataframe_registry: DataFramePysparkRegistry, dataframe_name: str
+        ) -> None:
+            dataframe_registry[dataframe_name] = dataframe_registry[
+                dataframe_name
+            ].select(*self.model.arguments.columns)
 
         return __f

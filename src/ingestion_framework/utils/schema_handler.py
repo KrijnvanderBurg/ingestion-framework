@@ -61,7 +61,9 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
         if FileHandler.is_json(schema):
             return SchemaHandlerPyspark.from_json(schema=schema)
 
-        raise NotImplementedError(f"No schema handling strategy recognised or supported for value: {schema}")
+        raise NotImplementedError(
+            f"No schema handling strategy recognised or supported for value: {schema}"
+        )
 
     @staticmethod
     def from_dict(schema: dict[str, Any]) -> StructType:

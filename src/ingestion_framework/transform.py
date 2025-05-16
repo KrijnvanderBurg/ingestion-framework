@@ -1,5 +1,8 @@
 """
-TODO
+Transform interface and implementations for various data transformations.
+
+This module provides abstract classes and implementations for data transformations
+using various function registrations.
 """
 
 from abc import ABC
@@ -7,7 +10,11 @@ from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.functions import FunctionAbstract
-from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
+from ingestion_framework.types import (
+    DataFramePysparkRegistry,
+    DataFrameT,
+    DecoratorRegistry,
+)
 
 FUNCTIONS: Final[str] = "functions"
 FUNCTION: Final[str] = "function"
@@ -80,7 +87,7 @@ class TransformModelAbstract(ABC):
             name = confeti[NAME]
             upstream_name = confeti[UPSTREAM_NAME]
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(name=name, upstream_name=upstream_name)
 
@@ -135,7 +142,9 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
             function_name: str = function_confeti[FUNCTION]
 
             if function_name not in cls.SUPPORTED_FUNCTIONS.keys():
-                raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
+                raise NotImplementedError(
+                    f"{FUNCTION} {function_name} is not supported."
+                )
 
             function_concrete: FunctionT = cls.SUPPORTED_FUNCTIONS[function_name]
             function_ = function_concrete.from_confeti(confeti=function_confeti)
@@ -146,6 +155,28 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
     def transform(self) -> None:
         """
         Apply all transform functions on df.
+
+        This method applies all transformation functions and stores the result in the registry
+        under the transform's name, reading from the upstream_name.
         """
+        # Copy the dataframe from upstream to current name
+        self.data_registry[self.model.name] = self.data_registry[
+            self.model.upstream_name
+        ]
+
+        # Apply transformations
         for function in self.functions:
-            function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
+            function.callable_(
+                dataframe_registry=self.data_registry, dataframe_name=self.model.name
+            )
+
+
+# Create a registry for Transform implementations
+class TransformRegistry(DecoratorRegistry[str, TransformAbstract]):
+    """
+    Registry for Transform implementations.
+
+    Maps function names to concrete TransformAbstract implementations.
+    """
+
+    pass
