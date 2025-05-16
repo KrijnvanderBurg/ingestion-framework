@@ -11,14 +11,8 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.pyspark.transforms.functions.base import (
-    ArgsAbstract,
-    ArgsT,
-    FunctionAbstract,
-    FunctionModelAbstract,
-    FunctionModelT,
-    FunctionPyspark,
-)
+from ingestion_framework.functions import ArgsAbstract, ArgsT, FunctionAbstract, FunctionModelAbstract, FunctionModelT
+from ingestion_framework.pyspark.function import FunctionPyspark
 from ingestion_framework.types import DataFramePysparkRegistry
 
 COLUMNS: Final[str] = "columns"
@@ -61,7 +55,7 @@ class SelectFunctionModelPysparkArgs(SelectFunctionModelAbstract.Args):
             for col_name in confeti[COLUMNS]:
                 columns.append(f.col(col_name))
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(columns=columns)
 

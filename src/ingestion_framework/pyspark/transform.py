@@ -7,8 +7,8 @@ from typing import Any
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
-from ingestion_framework.pyspark.transforms.functions.base import FunctionPyspark
-from ingestion_framework.pyspark.transforms.functions.pyspark.select import SelectFunctionPyspark
+from ingestion_framework.pyspark.function import FunctionPyspark
+from ingestion_framework.pyspark.functions.select import SelectFunctionPyspark
 from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
 
 

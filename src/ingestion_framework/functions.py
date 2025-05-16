@@ -97,12 +97,6 @@ class FunctionModelAbstract(Generic[ArgsT], ABC):
         return cls(function=function_name, arguments=arguments)
 
 
-class FunctionModelPyspark(FunctionModelAbstract[ArgsAbstract], ABC):
-    """
-    A concrete implementation of transformation functions using PySpark.
-    """
-
-
 FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModelAbstract)
 
 
@@ -160,13 +154,3 @@ class FunctionAbstract(Generic[FunctionModelT], ABC):
         """
         model = cls.model_concrete.from_confeti(confeti=confeti)
         return cls(model=model)
-
-
-class FunctionPyspark(FunctionAbstract[FunctionModelT], ABC):
-    """
-    A concrete implementation of transformation functions using PySpark.
-    """
-
-    @abstractmethod
-    def transform(self) -> Callable:
-        """TODO"""

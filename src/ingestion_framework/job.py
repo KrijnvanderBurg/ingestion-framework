@@ -11,10 +11,10 @@ from pyspark.sql.streaming.query import StreamingQuery
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import ExtractAbstract, ExtractContextAbstract, ExtractModelAbstract
+from ingestion_framework.functions import FunctionAbstract
 from ingestion_framework.pyspark.extract import ExtractContextPyspark
 from ingestion_framework.pyspark.load import LoadAbstract, LoadContextAbstract, LoadContextPyspark, LoadModelAbstract
 from ingestion_framework.pyspark.transform import TransformPyspark
-from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract
 from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
 from ingestion_framework.types import DataFrameT, StreamingQueryT
 from ingestion_framework.utils.file_handler import FileHandlerContext

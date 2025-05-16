@@ -6,7 +6,7 @@ from abc import ABC
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract
+from ingestion_framework.functions import FunctionAbstract
 from ingestion_framework.types import DataFramePysparkRegistry, DataFrameT
 
 FUNCTIONS: Final[str] = "functions"
