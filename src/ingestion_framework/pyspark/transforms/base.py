@@ -1,17 +1,5 @@
 """
 TODO
-
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
 """
 
 from abc import ABC
@@ -20,8 +8,8 @@ from typing import Any, Final, Generic, Self, TypeVar
 from pyspark.sql import DataFrame as DataFramePyspark
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.functions.base import FunctionAbstract, FunctionPyspark
-from ingestion_framework.transforms.functions.pyspark.select import SelectFunctionPyspark
+from ingestion_framework.pyspark.transforms.functions.base import FunctionAbstract, FunctionPyspark
+from ingestion_framework.pyspark.transforms.functions.pyspark.select import SelectFunctionPyspark
 from ingestion_framework.types import DataFrameT, RegistrySingleton
 
 FUNCTIONS: Final[str] = "functions"

@@ -1,17 +1,5 @@
 """
 TODO
-
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
 """
 
 import argparse
@@ -26,7 +14,7 @@ from pyspark.testing import assertDataFrameEqual
 
 from ingestion_framework.__main__ import main
 from ingestion_framework.job import LOADS
-from ingestion_framework.load.base import DATA_FORMAT, LOCATION, NAME, SCHEMA_LOCATION
+from ingestion_framework.pyspark.load.base import DATA_FORMAT, LOCATION, NAME, SCHEMA_LOCATION
 from ingestion_framework.utils.spark_handler import SparkHandler
 
 

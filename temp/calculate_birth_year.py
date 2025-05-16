@@ -9,7 +9,7 @@
 
 # from pyspark.sql import functions as F
 
-# from ingestion_framework.transforms.recipes.base import RecipePyspark
+# from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
 # from ingestion_framework.types import RegistrySingleton
 
 

@@ -1,24 +1,17 @@
 """
-TODO
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
-"""
+TODO"""
 
 from abc import ABC
 from typing import Generic
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
-from ingestion_framework.extract.base import ExtractAbstract, ExtractModelFilePyspark, ExtractModelT, ExtractPyspark
+from ingestion_framework.pyspark.extract.base import (
+    ExtractAbstract,
+    ExtractModelFilePyspark,
+    ExtractModelT,
+    ExtractPyspark,
+)
 from ingestion_framework.types import DataFrameT
 from ingestion_framework.utils.spark_handler import SparkHandler
 

@@ -1,17 +1,5 @@
 """
 Job class.
-
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
 """
 
 from abc import ABC, abstractmethod
@@ -22,11 +10,11 @@ from typing import Any, Final, Generic, Self
 from pyspark.sql.streaming.query import StreamingQuery
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.extract.base import ExtractAbstract, ExtractModelAbstract
-from ingestion_framework.extract.factory import ExtractContextAbstract, ExtractContextPyspark
-from ingestion_framework.load.base import LoadAbstract, LoadModelAbstract
-from ingestion_framework.load.factory import LoadContextAbstract, LoadContextPyspark
-from ingestion_framework.transforms.base import (
+from ingestion_framework.pyspark.extract.base import ExtractAbstract, ExtractModelAbstract
+from ingestion_framework.pyspark.extract.factory import ExtractContextAbstract, ExtractContextPyspark
+from ingestion_framework.pyspark.load.base import LoadAbstract, LoadModelAbstract
+from ingestion_framework.pyspark.load.factory import LoadContextAbstract, LoadContextPyspark
+from ingestion_framework.pyspark.transforms.base import (
     FunctionAbstract,
     TransformAbstract,
     TransformModelAbstract,

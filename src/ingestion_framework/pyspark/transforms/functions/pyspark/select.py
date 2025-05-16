@@ -1,7 +1,6 @@
 """
 Column transform function.
 
-
 """
 
 from abc import ABC
@@ -12,7 +11,7 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.functions.base import (
+from ingestion_framework.pyspark.transforms.functions.base import (
     ArgsAbstract,
     ArgsT,
     FunctionAbstract,

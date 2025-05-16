@@ -1,13 +1,12 @@
 """
-Recipe for filtering dataframe rows based on a condition.
-"""
+Recipe for filtering dataframe rows based on a condition."""
 
 from typing import Any
 
 from pyspark.sql import functions as F
 
-from ingestion_framework.transforms.recipes.base import RecipePyspark
-from ingestion_framework.transforms.registry import register_recipe
+from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
+from ingestion_framework.pyspark.transforms.registry import register_recipe
 from ingestion_framework.types import RegistrySingleton
 
 

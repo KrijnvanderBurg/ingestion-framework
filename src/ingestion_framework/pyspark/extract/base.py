@@ -1,19 +1,7 @@
 """
 TODO
 
-IO extract interface and strategy, extract implementations are in module ingestion_framework.loads.
-
-
-==============================================================================
-Copyright Krijn van der Burg. All rights reserved.
-
-This software is proprietary and confidential. No reproduction, distribution,
-or transmission is allowed without prior written permission. Unauthorized use,
-disclosure, or distribution is strictly prohibited.
-
-For inquiries and permission requests, contact Krijn van der Burg at
-krijnvdburg@protonmail.com.
-==============================================================================
+IO extract interface and strategy, extract implementations are in module ingestion_framework.pyspark.loads.
 """
 
 from abc import ABC, abstractmethod

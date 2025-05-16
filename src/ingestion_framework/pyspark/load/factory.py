@@ -1,8 +1,8 @@
 from abc import ABC
 from typing import Any
 
-from ingestion_framework.load.base import DATA_FORMAT, LoadAbstract, LoadFormat
-from ingestion_framework.load.pyspark.file_load import LoadFilePyspark
+from ingestion_framework.pyspark.load.base import DATA_FORMAT, LoadAbstract, LoadFormat
+from ingestion_framework.pyspark.load.pyspark.file_load import LoadFilePyspark
 
 
 class LoadContextAbstract(ABC):
