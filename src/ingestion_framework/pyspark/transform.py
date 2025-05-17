@@ -5,7 +5,6 @@ This module provides concrete implementations for transforming data using PySpar
 """
 
 from abc import ABC
-from typing import Any
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
@@ -36,10 +35,12 @@ class TransformModelPyspark(TransformModelAbstract):
 @TransformRegistry.register("default")
 class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
     """
-    Concrete implementation for PySpark DataFrame transformion.
+    Concrete implementation for PySpark DataFrame transformation.
+
+    This class provides PySpark-specific functionality for transforming data.
     """
 
     load_model_concrete = TransformModelPyspark
-    SUPPORTED_FUNCTIONS: dict[str, Any] = {
+    SUPPORTED_FUNCTIONS: dict[str, type[FunctionPyspark]] = {
         "select": SelectFunctionPyspark,
     }

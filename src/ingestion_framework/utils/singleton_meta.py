@@ -1,24 +1,40 @@
+"""
+Module providing metaclasses for implementing the Singleton design pattern.
+"""
+
 import threading
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
-_T = TypeVar("_T")
+T = TypeVar("T")
 
 
-class SingletonType(type, Generic[_T]):
-    # WeakValueDictionary is used to store the instances as weak references
-    # This allows the instances to be deleted when they are no longer needed through garbage collection
-    _instances: dict["SingletonType[_T]", _T] = dict()
+class SingletonType(type, Generic[T]):
+    """
+    Metaclass to ensure only one instance of a class is created.
+
+    Classes using this metaclass will always return the same instance
+    when instantiated multiple times.
+    """
+
+    _instances: dict[type, Any] = {}
     _lock: threading.Lock = threading.Lock()
 
-    def __call__(cls, *args, **kwargs) -> _T:
+    def __call__(cls, *args, **kwargs) -> T:
+        """
+        Override the call method to implement the singleton behavior.
+
+        Returns:
+            T: The singleton instance of the class.
+        """
         with cls._lock:
             if cls not in cls._instances:
-                # Assigning super().__call__ to a variable is crucial,
-                # as the value of cls is changed in __call__
+                # Create a new instance if one doesn't exist yet
                 instance = super(SingletonType, cls).__call__(*args, **kwargs)
                 cls._instances[cls] = instance
         return cls._instances[cls]
 
 
 class Singleton(metaclass=SingletonType):
-    pass
+    """
+    Base class for creating singleton classes by inheritance.
+    """

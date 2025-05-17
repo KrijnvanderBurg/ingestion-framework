@@ -1,5 +1,8 @@
 """
-Transform functions.
+Abstract base classes for transformation functions.
+
+This module provides the framework for creating and managing data transformation
+functions that can be applied to data frames and other structures.
 """
 
 from abc import ABC, abstractmethod
@@ -102,21 +105,23 @@ FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModelAbstract)
 
 class FunctionAbstract(Generic[FunctionModelT], ABC):
     """
-    Modelification for Transform.
+    Abstract base class for transformation functions.
+
+    This class defines the interface for all transformation functions in the system.
+    Each function has a model that defines its behavior and parameters.
 
     Args:
-        function (str): function name to execute.
-        arguments (AbstractArgs): arguments to pass to the function.
+        model (FunctionModelT): The function configuration model.
     """
 
     model_concrete: type[FunctionModelT]
 
     def __init__(self, model: FunctionModelT) -> None:
         """
-        Initialize a CastTransform object.
+        Initialize a function transformation object.
 
         Args:
-            model (CastModel): The CastModel object containing the casting information.
+            model (FunctionModelT): The model object containing the function configuration.
         """
         self.model = model
         self.callable_ = self.transform()
@@ -139,18 +144,23 @@ class FunctionAbstract(Generic[FunctionModelT], ABC):
 
     @abstractmethod
     def transform(self) -> Callable:
-        """TODO"""
+        """
+        Create a callable transformation function based on the model.
+
+        Returns:
+            Callable: A function that applies the transformation.
+        """
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        TODO
+        Create a function instance from a configuration dictionary.
 
         Args:
-            confeti (dict[str, Any]): The dictionary.
+            confeti (dict[str, Any]): The configuration dictionary.
 
         Returns:
-            FunctionAbstract: model
+            FunctionAbstract: A new function instance.
         """
         model = cls.model_concrete.from_confeti(confeti=confeti)
         return cls(model=model)

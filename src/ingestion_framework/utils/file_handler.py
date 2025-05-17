@@ -1,4 +1,9 @@
-""" """
+"""
+File handling utilities for reading and validating configuration files.
+
+This module provides a strategy pattern implementation for handling different file formats
+like JSON, YAML, etc. with a common interface.
+"""
 
 import json
 import os
@@ -40,6 +45,7 @@ class FileHandlerStrategy(ABC):
         """
         Check if the file exists.
 
+        Returns:
             bool: True if the file exists, False otherwise.
         """
         return self.filepath.exists()
@@ -148,13 +154,9 @@ class FileYamlHandler(FileHandlerStrategy):
         except FileNotFoundError as e:
             raise FileNotFoundError(f"File '{self.filepath}' not found.") from e
         except PermissionError as e:
-            raise PermissionError(
-                f"Permission denied for file '{self.filepath}'."
-            ) from e
+            raise PermissionError(f"Permission denied for file '{self.filepath}'.") from e
         except yaml.YAMLError as e:
-            raise yaml.YAMLError(
-                f"Error reading YAML file '{self.filepath}': {e}"
-            ) from e
+            raise yaml.YAMLError(f"Error reading YAML file '{self.filepath}': {e}") from e
 
 
 class FileJsonHandler(FileHandlerStrategy):
@@ -191,9 +193,7 @@ class FileJsonHandler(FileHandlerStrategy):
         except FileNotFoundError as e:
             raise FileNotFoundError(f"File '{self.filepath}' not found.") from e
         except PermissionError as e:
-            raise PermissionError(
-                f"Permission denied for file '{self.filepath}'."
-            ) from e
+            raise PermissionError(f"Permission denied for file '{self.filepath}'.") from e
         except json.JSONDecodeError as e:
             # Using ValueError instead of JSONDecodeError due to complexity in supplying additional arguments.
             raise ValueError(f"Error decoding JSON file '{self.filepath}': {e}") from e
@@ -225,9 +225,7 @@ class FileHandlerContext:
         _, file_extension = os.path.splitext(filepath)
         strategy_class = FileHandlerContext.SUPPORTED_EXTENSIONS.get(file_extension)
         if strategy_class is None:
-            raise NotImplementedError(
-                f"File extension '{file_extension}' is not supported."
-            )
+            raise NotImplementedError(f"File extension '{file_extension}' is not supported.")
 
         return strategy_class(filepath=filepath)
 

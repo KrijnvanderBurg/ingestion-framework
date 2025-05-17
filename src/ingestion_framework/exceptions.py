@@ -1,5 +1,5 @@
 class DictKeyError(KeyError):
-    def __init__(self, key, dict_) -> None:
+    def __init__(self, key: str, dict_: dict) -> None:
         super().__init__(key)
         self.key = key
         self.dict_ = dict_

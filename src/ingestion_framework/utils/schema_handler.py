@@ -1,5 +1,5 @@
 """
-Module to take care of creating a singleton of the execution environment class.
+Module for handling schema operations through a singleton interface.
 """
 
 import json
@@ -21,15 +21,45 @@ SchemaT = TypeVar("SchemaT", bound=StructType)
 class SchemaHandlerAbstract(Generic[SchemaT], ABC):
     @staticmethod
     @abstractmethod
-    def schema_factory(schema: str) -> SchemaT: ...
+    def schema_factory(schema: str) -> SchemaT | None:
+        """
+        Creates the appropriate schema handler based on the schema string.
+
+        Args:
+            schema (str): The schema specification string.
+
+        Returns:
+            SchemaT | None: The appropriate schema object or None if no schema.
+        """
+        ...
 
     @staticmethod
     @abstractmethod
-    def from_json(schema: str) -> SchemaT: ...
+    def from_json(schema: str) -> SchemaT:
+        """
+        Creates schema from a JSON string.
+
+        Args:
+            schema (str): JSON schema representation.
+
+        Returns:
+            SchemaT: The schema object created from JSON.
+        """
+        ...
 
     @staticmethod
     @abstractmethod
-    def from_file(filepath: str) -> SchemaT: ...
+    def from_file(filepath: str) -> SchemaT:
+        """
+        Loads schema from a file.
+
+        Args:
+            filepath (str): Path to the schema file.
+
+        Returns:
+            SchemaT: The schema object loaded from the file.
+        """
+        ...
 
 
 class SchemaHandlerPyspark(SchemaHandlerAbstract):
@@ -61,23 +91,21 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
         if FileHandler.is_json(schema):
             return SchemaHandlerPyspark.from_json(schema=schema)
 
-        raise NotImplementedError(
-            f"No schema handling strategy recognised or supported for value: {schema}"
-        )
+        raise NotImplementedError(f"No schema handling strategy recognised or supported for value: {schema}")
 
     @staticmethod
     def from_dict(schema: dict[str, Any]) -> StructType:
         """
-        Read JSON schema string.
+        Create StructType schema from a dictionary.
 
         Args:
-            schema (str): schema json.
+            schema (dict[str, Any]): Schema as a dictionary.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema.
 
         Raises:
-            ValueError: If there's an error decoding the JSON schema.
+            ValueError: If there's an error creating the schema.
         """
         try:
             return StructType.fromJson(json=schema)
@@ -88,13 +116,13 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
     @staticmethod
     def from_json(schema: str) -> StructType:
         """
-        Read JSON schema string.
+        Create schema from JSON string.
 
         Args:
-            schema (str): schema json.
+            schema (str): Schema JSON string.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema.
 
         Raises:
             ValueError: If there's an error decoding the JSON schema.
@@ -112,17 +140,16 @@ class SchemaHandlerPyspark(SchemaHandlerAbstract):
         Read JSON schema file.
 
         Args:
-            filepath (str): path to schema file.
+            filepath (str): Path to schema file.
 
         Returns:
-            StructType: The test JSON schema.
+            StructType: The PySpark schema.
 
         Raises:
             FileNotFoundError: If the schema file is not found.
             PermissionError: If permission is denied for accessing the schema file.
             ValueError: If there's an error decoding the JSON schema.
         """
-
         file_handler: FileHandler = FileHandlerContext.factory(filepath=filepath)
         file_content = file_handler.read()
         schema = SchemaHandlerPyspark.from_dict(schema=file_content)

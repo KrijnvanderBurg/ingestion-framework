@@ -12,9 +12,7 @@ from sys import stdout
 FORMATTER = logging.Formatter("%(asctime)s — %(name)s — %(levelname)s — %(message)s")
 
 
-def set_logger(
-    name: str, filename: str = "ingestion.log", level: int = logging.INFO
-) -> logging.Logger:
+def set_logger(name: str, filename: str = "ingestion.log", level: int = logging.INFO) -> logging.Logger:
     """
     Configure the logging settings.
 
@@ -49,12 +47,12 @@ def set_logger(
 
 def get_logger(name: str) -> logging.Logger:
     """
-    Get logger instance by name.
+    Get an existing logger instance by name.
 
     Args:
-        name (str): Name of the logger.
+        name (str): Name of the logger to retrieve.
 
     Returns:
-        logging.Logger: Logger instance.
+        logging.Logger: The requested logger instance.
     """
     return logging.getLogger(name)
