@@ -135,15 +135,15 @@ class FunctionAbstract(Generic[FunctionModelT], ABC):
         self._model = value
 
     @property
-    def callable_(self) -> Callable:
+    def callable_(self) -> Callable[..., Any]:
         return self._callable_
 
     @callable_.setter
-    def callable_(self, value: Callable) -> None:
+    def callable_(self, value: Callable[..., Any]) -> None:
         self._callable_ = value
 
     @abstractmethod
-    def transform(self) -> Callable:
+    def transform(self) -> Callable[..., Any]:
         """
         Create a callable transformation function based on the model.
 

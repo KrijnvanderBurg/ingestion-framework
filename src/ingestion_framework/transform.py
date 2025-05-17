@@ -39,25 +39,39 @@ class TransformModelAbstract(ABC):
     @property
     def name(self) -> str:
         """
+        Get the name of the transformation.
+
         Returns:
-            str
+            str: The transformation name.
         """
         return self._name
 
     @name.setter
     def name(self, value: str) -> None:
         """
+        Set the name of the transformation.
+
         Args:
-            value (str)
+            value (str): The transformation name to set.
         """
         self._name = value
 
     @property
     def upstream_name(self) -> str:
+        """Get the name of the upstream data source.
+
+        Returns:
+            str: The upstream data source name.
+        """
         return self._upstream_name
 
     @upstream_name.setter
     def upstream_name(self, value: str) -> None:
+        """Set the upstream data source name.
+
+        Args:
+            value (str): The upstream data source name to set.
+        """
         self._upstream_name = value
 
     @classmethod
