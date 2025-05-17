@@ -147,34 +147,51 @@ class TransformAbstract(Generic[TransformModelT, FunctionT, DataFrameT], ABC):
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
-        """Create an instance of TransformAbstract from configuration."""
-        model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
+        """
+        Create an instance of TransformAbstract from configuration.
 
-        functions = []
+        Args:
+            confeti: Configuration dictionary containing transformation specifications.
+                Must contain 'name' and 'upstream_name' keys, and optionally a 'functions' list.
+
+        Returns:
+            A new instance of the transformation class.
+
+        Raises:
+            DictKeyError: If required keys are missing from the configuration.
+            NotImplementedError: If a specified function is not supported.
+        """
+        model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
+        functions: list[FunctionT] = []
 
         for function_confeti in confeti.get(FUNCTIONS, []):
             function_name: str = function_confeti[FUNCTION]
 
-            if function_name not in cls.SUPPORTED_FUNCTIONS.keys():
+            if function_name not in cls.SUPPORTED_FUNCTIONS:
                 raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
 
-            function_concrete: FunctionT = cls.SUPPORTED_FUNCTIONS[function_name]
-            function_ = function_concrete.from_confeti(confeti=function_confeti)
-            functions.append(function_)
+            function_concrete: type[FunctionT] = cls.SUPPORTED_FUNCTIONS[function_name]
+            function_instance = function_concrete.from_confeti(confeti=function_confeti)
+            functions.append(function_instance)
 
         return cls(model=model, functions=functions)
 
     def transform(self) -> None:
         """
-        Apply all transform functions on df.
+        Apply all transformation functions to the data source.
 
-        This method applies all transformation functions and stores the result in the registry
-        under the transform's name, reading from the upstream_name.
+        This method performs the following steps:
+        1. Copies the dataframe from the upstream source to current transform's name
+        2. Sequentially applies each transformation function to the dataframe
+        3. Each function updates the registry with its results
+
+        Note:
+            Functions are applied in the order they were defined in the configuration.
         """
         # Copy the dataframe from upstream to current name
         self.data_registry[self.model.name] = self.data_registry[self.model.upstream_name]
 
-        # Apply transformations
+        # Apply transformations sequentially
         for function in self.functions:
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
 
@@ -186,5 +203,3 @@ class TransformRegistry(DecoratorRegistrySingleton[str, TransformAbstract]):
 
     Maps function names to concrete TransformAbstract implementations.
     """
-
-    pass

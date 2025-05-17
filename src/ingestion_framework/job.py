@@ -43,7 +43,10 @@ class Engine(Enum):
 
 class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     """
-    Job class to perform data extraction, transformations and loading (ETL).
+    Abstract base class to perform data extraction, transformations and loading (ETL).
+
+    This class defines the core components of an ETL job and provides a standard
+    interface for different engine implementations.
     """
 
     extract_concrete: type[ExtractContextAbstract]
@@ -61,10 +64,10 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         Initialize Job instance.
 
         Args:
-            engine (OptionsEngine): Engine type.
-            extracts (list[ExtractAbstract]): Extract modelifications.
-            transforms (list[TransformAbstract]): Transform modelifications.
-            loads (list[LoadAbstract]): Load modelifications.
+            engine: The engine type to use for processing.
+            extracts: List of extract operations to perform.
+            transforms: List of transform operations to perform.
+            loads: List of load operations to perform.
         """
         self.engine = engine
         self.extracts = extracts
@@ -113,20 +116,23 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        Get the job modelifications from confeti.
+        Create a job instance from configuration dictionary.
 
         Args:
-            confeti (dict[str, Any]): confeti.
+            confeti: Configuration dictionary containing job specifications.
+                Must contain 'engine' and 'extracts' keys, and optionally
+                'transforms' and 'loads' keys.
 
         Returns:
-            Job: model.
+            A new instance of the job class.
 
         Raises:
-            ValueError: If the engine in the confeti is not supported.
+            DictKeyError: If required keys are missing from the configuration.
+            ValueError: If the engine in the configuration is not supported.
         """
-        extracts = []
-        transforms = []
-        loads = []
+        extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]] = []
+        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]] = []
+        loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]] = []
 
         try:
             engine = Engine(confeti[ENGINE])
@@ -154,13 +160,20 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
     @classmethod
     def from_confeti_path(cls, path: Path) -> Self:
         """
-        Create a job instance from a Confeti file.
+        Create a job instance from a configuration file path.
+
+        This method reads the configuration from the specified file and then creates
+        a job instance using the from_confeti method.
 
         Args:
-            path (Path): Path to the Confeti file.
+            path: Path to the configuration file.
 
         Returns:
-            Job: Job instance.
+            A new instance of the job class.
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+            ValueError: If the file cannot be parsed as a valid configuration.
         """
         file_handler = FileHandlerContext.factory(filepath=str(path))
         confeti = file_handler.read()
@@ -177,11 +190,12 @@ class JobRegistry(DecoratorRegistrySingleton[Engine, JobAbstract]):
 
 
 # For backward compatibility with existing code
-class Job(JobAbstract):
+class Job(JobAbstract[DataFrameT, StreamingQueryT]):
     """
     Legacy Job class for backward compatibility.
 
-    Use JobPyspark instead for new code.
+    This implementation uses PySpark as the default engine.
+    For new code, consider using engine-specific implementations.
     """
 
     extract_concrete = ExtractContextPyspark
@@ -190,7 +204,9 @@ class Job(JobAbstract):
 
     def execute(self) -> None:
         """
-        Extract data into a DataFrame, transform the DataFrame, then load the DataFrame.
+        Execute the job by running extract, transform, and load operations in sequence.
+
+        This method processes each operation in the order: extracts, transforms, loads.
         """
         for extract in self.extracts:
             extract.extract()
@@ -204,12 +220,15 @@ class Job(JobAbstract):
     @classmethod
     def from_file(cls, filepath: str) -> "Job":
         """
-        Legacy method for backward compatibility.
+        Legacy method for backward compatibility - create a job from a configuration file.
 
         Args:
-            filepath (str): Path to the confeti file
+            filepath: Path to the configuration file as a string
 
         Returns:
-            Job instance
+            An initialized Job instance
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist
         """
         return cls.from_confeti_path(Path(filepath))
