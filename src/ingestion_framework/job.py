@@ -10,8 +10,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Generic, Self
 
-from pyspark.sql.streaming.query import StreamingQuery
-
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import (
     ExtractAbstract,
@@ -152,28 +150,6 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
             loads.append(load_instance)
 
         return cls(engine, extracts, transforms, loads)
-
-    def run(self) -> list[StreamingQuery]:
-        """
-        Run the job.
-
-        Returns:
-            list[StreamingQuery]: stream execution query.
-        """
-        queries = []
-
-        for extract in self.extracts:
-            extract.extract()
-
-        for transform in self.transforms:
-            transform.transform()
-
-        for load in self.loads:
-            load.load()
-            if load.model.method.value == "streaming":
-                queries.append(load.data_registry[load.model.name])
-
-        return queries
 
     @classmethod
     def from_confeti_path(cls, path: Path) -> Self:
