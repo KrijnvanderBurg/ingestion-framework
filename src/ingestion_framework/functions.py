@@ -92,7 +92,7 @@ class FunctionModelAbstract(Generic[ArgsT], ABC):
             arguments_dict = confeti[ARGUMENTS]
             arguments = cls.args_concrete.from_confeti(confeti=arguments_dict)
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti)
+            raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
         return cls(function=function_name, arguments=arguments)
 

@@ -3,6 +3,7 @@ from collections.abc import Iterator
 from typing import Any, Callable, Dict, Generic, List, Type, TypeVar
 
 from pyspark.sql import DataFrame as DataFramePyspark
+from pyspark.sql.streaming import StreamingQuery as StreamingQueryPyspark
 from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
 
 DataFrameT = TypeVar("DataFrameT", bound=DataFramePyspark)
@@ -23,31 +24,66 @@ class SingletonType(type):
         return cls._instances[cls]
 
 
-class Registry:
-    """A metaclass for tracking and managing any kind of objects."""
+# Type variables for Registry
+K = TypeVar("K")  # Key type for both class registry and instance registry
+T = TypeVar("T")  # Value type (class being registered in class registry)
+V = TypeVar("V")  # Value type for instance registry (often instances of T)
+
+
+class DecoratorRegistrySingleton(Generic[K, T], metaclass=SingletonType):
+    """
+    A unified registry that provides both instance item tracking and class decoration capabilities.
+
+    This registry serves two purposes:
+    1. As an instance registry to track and manage objects with keys of type K.
+    2. As a decorator registry that maps keys of type K to classes of type T.
+
+    The generic parameters allow for type-safe specialization:
+    - K: The key type for both registries (class and instance)
+    - T: The value type for class registry (the class being registered)
+    - V: The value type for instance registry (often instances of T)
+
+    Example:
+        class MyRegistry(Registry[str, MyBaseClass, MyBaseClass]):
+            pass
+
+        # Class registration
+        @MyRegistry.register("key1")
+        class MyImplementation(MyBaseClass):
+            pass
+
+        # Instance registration
+        registry = MyRegistry()
+        registry["instance1"] = MyImplementation()
+    """
+
+    # Class-level registry for decorator pattern
+    _registry: Dict[K, List[Type[T]]] = {}
 
     def __init__(self) -> None:
-        self._items: dict[str, Any] = dict()
+        """Initialize the instance registry."""
+        self._items: dict[K, T] = dict()
 
-    def __setitem__(self, name: str, item: Any) -> None:
+    # Instance registry methods
+    def __setitem__(self, name: K, item: T) -> None:
         """Set an item with a given name. Replaces any existing item."""
         self._items[name] = item
 
-    def __getitem__(self, name: str) -> Any:
+    def __getitem__(self, name: K) -> T:
         """Get an item by its name. Raises KeyError if not found."""
         try:
             return self._items[name]
         except KeyError as e:
             raise KeyError(f"Item '{name}' not found.") from e
 
-    def __delitem__(self, name: str) -> None:
+    def __delitem__(self, name: K) -> None:
         """Delete an item by its name. Raises KeyError if not found."""
         try:
             del self._items[name]
         except KeyError as e:
             raise KeyError(f"Item '{name}' not found.") from e
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: K) -> bool:
         """Check if an item exists by its name."""
         return name in self._items
 
@@ -55,36 +91,11 @@ class Registry:
         """Get the number of items tracked."""
         return len(self._items)
 
-    def __iter__(self) -> Iterator[Any]:
+    def __iter__(self) -> Iterator[T]:
         """Iterate over the items."""
         return iter(self._items.values())
 
-
-# Enhanced Decorator registry pattern implementation
-K = TypeVar("K")  # Key type
-T = TypeVar("T")  # Value type (class being registered)
-
-
-class DecoratorRegistrySingleton(Generic[K, T], Registry, metaclass=SingletonType):
-    """
-    A decorator registry that maps keys to classes.
-    Used to implement a more flexible registry pattern with decorators.
-
-    This is a generic class that can be specialized for specific use cases.
-    The K type parameter represents the key type, and the T type parameter
-    represents the value type (the class being registered).
-
-    Example:
-        class MyRegistry(DecoratorRegistrySingleton[str, MyBaseClass]):
-            pass
-
-        @MyRegistry.register("key1")
-        class MyImplementation(MyBaseClass):
-            pass
-    """
-
-    _registry: Dict[Any, List[Type]] = {}
-
+    # Class decorator registry methods
     @classmethod
     def register(cls, key: K) -> Callable[[Type[T]], Type[T]]:
         """
@@ -157,5 +168,5 @@ class DecoratorRegistrySingleton(Generic[K, T], Registry, metaclass=SingletonTyp
         return {k: v.copy() for k, v in cls._registry.items()}
 
 
-class DataFramePysparkRegistry(DecoratorRegistrySingleton[str, DataFramePyspark]):
+class DataFramePysparkRegistry(DecoratorRegistrySingleton[str, DataFramePyspark | StreamingQueryPyspark]):
     pass

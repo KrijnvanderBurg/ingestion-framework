@@ -248,6 +248,3 @@ class LoadContextPyspark(LoadContextAbstract):
 
     This class provides factory methods for creating PySpark loaders.
     """
-
-    # No need to define strategy dictionary anymore as we're using the decorator registry
-    pass
