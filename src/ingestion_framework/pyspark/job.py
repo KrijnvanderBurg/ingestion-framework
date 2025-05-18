@@ -21,16 +21,3 @@ class JobPyspark(JobAbstract):
     extract_concrete = ExtractContextPyspark
     transform_concrete = TransformPyspark
     load_concrete = LoadContextPyspark
-
-    def execute(self) -> None:
-        """
-        Extract data into a DataFrame, transform the DataFrame, then load the DataFrame.
-        """
-        for extract in self.extracts:
-            extract.extract()
-
-        for transform in self.transforms:
-            transform.transform()
-
-        for load in self.loads:
-            load.load()

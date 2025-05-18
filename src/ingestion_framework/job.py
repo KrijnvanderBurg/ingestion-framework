@@ -7,27 +7,14 @@ across various engines and data formats.
 
 from abc import ABC
 from enum import Enum
-from pathlib import Path
 from typing import Any, Final, Generic, Self
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.extract import (
-    ExtractAbstract,
-    ExtractContextAbstract,
-    ExtractModelAbstract,
-)
+from ingestion_framework.extract import ExtractAbstract, ExtractContextAbstract, ExtractModelAbstract
 from ingestion_framework.functions import FunctionAbstract
-from ingestion_framework.load import (
-    LoadAbstract,
-    LoadContextAbstract,
-    LoadModelAbstract,
-)
-from ingestion_framework.pyspark.extract import ExtractContextPyspark
-from ingestion_framework.pyspark.load import LoadContextPyspark
-from ingestion_framework.pyspark.transform import TransformPyspark
+from ingestion_framework.load import LoadAbstract, LoadContextAbstract, LoadModelAbstract
 from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
 from ingestion_framework.types import DataFrameT, DecoratorRegistrySingleton, StreamingQueryT
-from ingestion_framework.utils.file_handler import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
 EXTRACTS: Final[str] = "extracts"
@@ -142,8 +129,8 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
         # Don't use registry here to avoid circular dependency
         # The subclass will handle its own instantiation
         for extract in confeti[EXTRACTS]:
-            extract_class = cls.extract_concrete.factory(extract)
-            extract_instance = extract_class.from_confeti(extract)
+            extract_cls = cls.extract_concrete.factory(extract)
+            extract_instance = extract_cls.from_confeti(extract)
             extracts.append(extract_instance)
 
         for transform in confeti.get(TRANSFORMS, []):
@@ -157,56 +144,9 @@ class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
 
         return cls(engine, extracts, transforms, loads)
 
-    @classmethod
-    def from_confeti_path(cls, path: Path) -> Self:
-        """
-        Create a job instance from a configuration file path.
-
-        This method reads the configuration from the specified file and then creates
-        a job instance using the from_confeti method.
-
-        Args:
-            path: Path to the configuration file.
-
-        Returns:
-            A new instance of the job class.
-
-        Raises:
-            FileNotFoundError: If the specified file does not exist.
-            ValueError: If the file cannot be parsed as a valid configuration.
-        """
-        file_handler = FileHandlerContext.factory(filepath=str(path))
-        confeti = file_handler.read()
-        return cls.from_confeti(confeti)
-
-
-# Create a registry for Job implementations
-class JobRegistry(DecoratorRegistrySingleton[Engine, JobAbstract]):
-    """
-    Registry for Job implementations.
-
-    Maps Engine enum values to concrete JobAbstract implementations.
-    """
-
-
-# For backward compatibility with existing code
-class Job(JobAbstract[DataFrameT, StreamingQueryT]):
-    """
-    Legacy Job class for backward compatibility.
-
-    This implementation uses PySpark as the default engine.
-    For new code, consider using engine-specific implementations.
-    """
-
-    extract_concrete = ExtractContextPyspark
-    transform_concrete = TransformPyspark
-    load_concrete = LoadContextPyspark
-
     def execute(self) -> None:
         """
-        Execute the job by running extract, transform, and load operations in sequence.
-
-        This method processes each operation in the order: extracts, transforms, loads.
+        Extract data into a DataFrame, transform the DataFrame, then load the DataFrame.
         """
         for extract in self.extracts:
             extract.extract()
@@ -217,18 +157,42 @@ class Job(JobAbstract[DataFrameT, StreamingQueryT]):
         for load in self.loads:
             load.load()
 
-    @classmethod
-    def from_file(cls, filepath: str) -> "Job":
+
+class JobRegistry(DecoratorRegistrySingleton[Engine, JobAbstract]):
+    """
+    Registry for Job implementations.
+
+    Maps JobFormat enum values to concrete JobAbstract implementations.
+    """
+
+
+class JobContext:
+    """
+    Factory class to create JobModel instances.
+    """
+
+    @staticmethod
+    def from_confeti(confeti: dict[str, Any]) -> type[JobAbstract]:
         """
-        Legacy method for backward compatibility - create a job from a configuration file.
+        Create an appropriate job class based on the format specified in the configuration.
+
+        This factory method uses the JobRegistry to look up the appropriate
+        implementation class based on the data format.
 
         Args:
-            filepath: Path to the configuration file as a string
+            confeti: Configuration dictionary that must include a 'data_format' key
+                compatible with the JobFormat enum
 
         Returns:
-            An initialized Job instance
+            The concrete jobion class for the specified format
 
         Raises:
-            FileNotFoundError: If the specified file does not exist
+            NotImplementedError: If the specified job format is not supported
+            KeyError: If the 'data_format' key is missing from the configuration
         """
-        return cls.from_confeti_path(Path(filepath))
+        try:
+            engine = Engine(confeti[ENGINE])
+            return JobRegistry.get(engine)
+        except KeyError as e:
+            format_name = confeti.get(ENGINE, "<missing>")
+            raise NotImplementedError(f"Job format {format_name} is not supported.") from e
