@@ -6,13 +6,13 @@ import logging
 
 from pyspark.sql import SparkSession
 
-from ingestion_framework.utils.log_handler import set_logger
-from ingestion_framework.utils.singleton_meta import SingletonType
+from ingestion_framework.types import Singleton
+from ingestion_framework.utils.logger import get_logger
 
-logger: logging.Logger = set_logger(__name__)
+logger: logging.Logger = get_logger(__name__)
 
 
-class SparkHandler(metaclass=SingletonType):
+class SparkHandler(metaclass=Singleton):
     """
     Singleton handler for SparkSession to ensure only one active session.
     """

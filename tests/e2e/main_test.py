@@ -13,9 +13,9 @@ from pyspark.sql.types import StructType
 from pyspark.testing import assertDataFrameEqual
 
 from ingestion_framework.__main__ import main
-from ingestion_framework.job import LOADS
-from ingestion_framework.pyspark.load import DATA_FORMAT, LOCATION, NAME, SCHEMA_LOCATION
-from ingestion_framework.utils.spark_handler import SparkHandler
+from ingestion_framework2.job import LOADS
+from ingestion_framework2.pyspark.load import DATA_FORMAT, LOCATION, NAME, SCHEMA_LOCATION
+from ingestion_framework2.utils.spark_handler import SparkHandler
 
 
 # https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/functions/cast

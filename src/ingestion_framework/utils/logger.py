@@ -1,9 +1,3 @@
-"""
-Logger Implementation.
-
-This module provides functionality for configuring and obtaining logger instances.
-"""
-
 import logging
 from logging.handlers import RotatingFileHandler
 from sys import stdout

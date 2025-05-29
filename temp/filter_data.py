@@ -5,9 +5,9 @@ from typing import Any
 
 from pyspark.sql import functions as F
 
-from ingestion_framework.pyspark.transforms.recipes.base import RecipePyspark
-from ingestion_framework.pyspark.transforms.registry import register_recipe
 from ingestion_framework.types import DataFramePysparkRegistry
+from ingestion_framework2.pyspark.transforms.recipes.base import RecipePyspark
+from ingestion_framework2.pyspark.transforms.registry import register_recipe
 
 
 @register_recipe("filter_data")

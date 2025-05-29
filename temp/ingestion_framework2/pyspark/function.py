@@ -8,7 +8,7 @@ functions that can be applied to PySpark DataFrames.
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 
-from ingestion_framework.functions import (
+from ingestion_framework2.functions import (
     ArgsAbstract,
     FunctionAbstract,
     FunctionModelAbstract,

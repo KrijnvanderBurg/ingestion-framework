@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
-from ingestion_framework.exceptions import DictKeyError
+from ingestion_framework2.exceptions import DictKeyError
 
 FUNCTION: Final[str] = "function"
 ARGUMENTS: Final[str] = "arguments"

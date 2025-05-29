@@ -8,9 +8,9 @@ from abc import ABC
 
 from pyspark.sql import DataFrame as DataFramePyspark
 
-from ingestion_framework.pyspark.function import FunctionPyspark
-from ingestion_framework.pyspark.functions.select import SelectFunctionPyspark
-from ingestion_framework.transform import (
+from ingestion_framework2.pyspark.function import FunctionPyspark
+from ingestion_framework2.pyspark.functions.select import SelectFunctionPyspark
+from ingestion_framework2.transform import (
     TransformAbstract,
     TransformModelAbstract,
     TransformRegistry,

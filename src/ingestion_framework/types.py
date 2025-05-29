@@ -1,17 +1,51 @@
+"""
+Core type definitions for the ingestion framework.
+
+This module provides fundamental type definitions and design patterns used throughout
+the ingestion framework, including:
+
+- Singleton metaclass for ensuring only one instance of a class exists
+- Registry decorators for registering and retrieving classes based on keys
+- Type variables and generics for type-safe operations
+
+These types provide the foundation for the ingestion framework's architecture,
+enabling features like component registration, singleton services, and type safety.
+"""
+
 import threading
-from collections.abc import Iterator
-from typing import Any, Callable, Dict, Generic, List, Type, TypeVar
+from collections.abc import Callable, Iterator
+from typing import Any, Generic, TypeVar
 
-from pyspark.sql import DataFrame as DataFramePyspark
-from pyspark.sql.streaming import StreamingQuery as StreamingQueryPyspark
-from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
+from pyspark.sql import DataFrame
 
-DataFrameT = TypeVar("DataFrameT", bound=DataFramePyspark)
-StreamingQueryT = TypeVar("StreamingQueryT", bound=StreamingQueryPyspark)
+K = TypeVar("K")
+V = TypeVar("V")
 
 
-class SingletonType(type):
-    _instances: dict[type, Any] = dict()
+class Singleton(type):
+    """A metaclass for creating singleton classes.
+
+    This metaclass ensures that only one instance of a class is created. Subsequent instantiations
+    of a class using this metaclass will return the same instance.
+
+    Attributes:
+        _instances (dict[type, Any]): Dictionary mapping classes to their singleton instances.
+        _lock (threading.Lock): Thread lock to ensure thread-safe instance creation.
+
+    Example:
+        ```
+        class Logger(metaclass=Singleton):
+            def __init__(self):
+                self.logs = []
+
+        # These will refer to the same instance
+        logger1 = Logger()
+        logger2 = Logger()
+        assert logger1 is logger2
+        ```Z
+    """
+
+    _instances: dict[Any, Any] = {}
     _lock: threading.Lock = threading.Lock()
 
     def __call__(cls, *args, **kwargs) -> Any:
@@ -19,57 +53,70 @@ class SingletonType(type):
             if cls not in cls._instances:
                 # Assigning super().__call__ to a variable is crucial,
                 # as the value of cls is changed in __call__
-                instance = super(SingletonType, cls).__call__(*args, **kwargs)
+                instance = super(Singleton, cls).__call__(*args, **kwargs)
                 cls._instances[cls] = instance
         return cls._instances[cls]
 
 
-# Type variables for Registry
-K = TypeVar("K")  # Key type for both class registry and instance registry
-T = TypeVar("T")  # Value type (class being registered in class registry)
-V = TypeVar("V")  # Value type for instance registry (often instances of T)
+class RegistryDecorator(Generic[K, V]):
+    """A registry for classes that can be decorated and registered with a key."""
+
+    _registry: dict[K, list[type[V]]] = {}
+
+    @classmethod
+    def register(cls, key: K) -> Callable[[type[V]], type[V]]:
+        """
+        Class decorator to register a class with a specific key in the registry.
+
+        Args:
+            key: The key to register the class with
+
+        Returns:
+            A decorator function that registers the class and returns it unchanged
+        """
+
+        def decorator(registered_class: type[V]) -> type[V]:
+            if key not in cls._registry:
+                cls._registry[key] = []
+
+            if registered_class not in cls._registry[key]:  # Prevent duplicate registration
+                cls._registry[key].append(registered_class)
+
+            return registered_class
+
+        return decorator
+
+    @classmethod
+    def get(cls, key: K) -> type[V]:
+        """
+        Get the first registered class for a key.
+
+        Args:
+            key: The key to look up
+
+        Returns:
+            The registered class
+
+        Raises:
+            KeyError: If no class is registered for the given key
+        """
+        try:
+            return cls._registry[key][0]
+        except (KeyError, IndexError) as e:
+            raise KeyError(f"No class registered for key: {key}") from e
 
 
-class DecoratorRegistrySingleton(Generic[K, T], metaclass=SingletonType):
-    """
-    A unified registry that provides both instance item tracking and class decoration capabilities.
-
-    This registry serves two purposes:
-    1. As an instance registry to track and manage objects with keys of type K.
-    2. As a decorator registry that maps keys of type K to classes of type T.
-
-    The generic parameters allow for type-safe specialization:
-    - K: The key type for both registries (class and instance)
-    - T: The value type for class registry (the class being registered)
-    - V: The value type for instance registry (often instances of T)
-
-    Example:
-        class MyRegistry(Registry[str, MyBaseClass, MyBaseClass]):
-            pass
-
-        # Class registration
-        @MyRegistry.register("key1")
-        class MyImplementation(MyBaseClass):
-            pass
-
-        # Instance registration
-        registry = MyRegistry()
-        registry["instance1"] = MyImplementation()
-    """
-
-    # Class-level registry for decorator pattern
-    _registry: Dict[K, List[Type[T]]] = {}
-
+class RegistryInstance(Generic[K, V], metaclass=Singleton):
     def __init__(self) -> None:
         """Initialize the instance registry."""
-        self._items: dict[K, T] = dict()
+        self._items: dict[K, V] = dict()
 
     # Instance registry methods
-    def __setitem__(self, name: K, item: T) -> None:
+    def __setitem__(self, name: K, item: V) -> None:
         """Set an item with a given name. Replaces any existing item."""
         self._items[name] = item
 
-    def __getitem__(self, name: K) -> T:
+    def __getitem__(self, name: K) -> V:
         """Get an item by its name. Raises KeyError if not found."""
         try:
             return self._items[name]
@@ -91,82 +138,10 @@ class DecoratorRegistrySingleton(Generic[K, T], metaclass=SingletonType):
         """Get the number of items tracked."""
         return len(self._items)
 
-    def __iter__(self) -> Iterator[T]:
+    def __iter__(self) -> Iterator[V]:
         """Iterate over the items."""
         return iter(self._items.values())
 
-    # Class decorator registry methods
-    @classmethod
-    def register(cls, key: K) -> Callable[[Type[T]], Type[T]]:
-        """
-        Class decorator to register a class with a specific key in the registry.
 
-        Args:
-            key: The key to register the class with
-
-        Returns:
-            A decorator function that registers the class and returns it unchanged
-
-        Example:
-            @MyRegistry.register(ExtractFormat.CSV)
-            class CsvExtractor(BaseExtractor):
-                pass
-        """
-
-        def decorator(registered_class: Type[T]) -> Type[T]:
-            if key not in cls._registry:
-                cls._registry[key] = []
-            cls._registry[key].append(registered_class)
-            return registered_class
-
-        return decorator
-
-    @classmethod
-    def get(cls, key: K) -> Type[T]:
-        """
-        Get the first registered class for a key.
-
-        Args:
-            key: The key to look up
-
-        Returns:
-            The registered class
-
-        Raises:
-            KeyError: If no class is registered for the key
-        """
-        if key not in cls._registry or not cls._registry[key]:
-            raise KeyError(f"No class registered for key: {key}")
-        return cls._registry[key][0]
-
-    @classmethod
-    def get_all(cls, key: K) -> List[Type[T]]:
-        """
-        Get all registered classes for a key.
-
-        Args:
-            key: The key to look up
-
-        Returns:
-            List of registered classes
-
-        Raises:
-            KeyError: If no class is registered for the key
-        """
-        if key not in cls._registry or not cls._registry[key]:
-            raise KeyError(f"No class registered for key: {key}")
-        return cls._registry[key].copy()
-
-    @classmethod
-    def all(cls) -> Dict[K, List[Type[T]]]:
-        """
-        Get all registered classes.
-
-        Returns:
-            Dictionary mapping keys to lists of registered classes
-        """
-        return {k: v.copy() for k, v in cls._registry.items()}
-
-
-class DataFramePysparkRegistry(DecoratorRegistrySingleton[str, DataFramePyspark | StreamingQueryPyspark]):
-    pass
+class DataFrameRegistry(RegistryDecorator[str, DataFrame]):
+    """A registry for DataFrame or StreamingQuery classes."""

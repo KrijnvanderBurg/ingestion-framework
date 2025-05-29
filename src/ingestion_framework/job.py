@@ -1,20 +1,15 @@
 """
-Job interface and implementations for various data processing jobs.
-
-This module provides abstract classes and implementations for ETL job execution
-across various engines and data formats.
+Job class.
 """
 
-from abc import ABC
-from enum import Enum
-from typing import Any, Final, Generic, Self
+from pathlib import Path
+from typing import Any, Final, Self
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.extract import ExtractAbstract, ExtractContextAbstract, ExtractModelAbstract
-from ingestion_framework.functions import FunctionAbstract
-from ingestion_framework.load import LoadAbstract, LoadContextAbstract, LoadModelAbstract
-from ingestion_framework.transform import TransformAbstract, TransformModelAbstract
-from ingestion_framework.types import DataFrameT, DecoratorRegistrySingleton, StreamingQueryT
+from ingestion_framework.extract import Extract
+from ingestion_framework.load import Load
+from ingestion_framework.transform import Transform
+from ingestion_framework.utils.file import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
 EXTRACTS: Final[str] = "extracts"
@@ -22,177 +17,140 @@ TRANSFORMS: Final[str] = "transforms"
 LOADS: Final[str] = "loads"
 
 
-class Engine(Enum):
-    """Enumeration for job engines."""
-
-    PYSPARK = "pyspark"
-
-
-class JobAbstract(Generic[DataFrameT, StreamingQueryT], ABC):
+class Job:
     """
-    Abstract base class to perform data extraction, transformations and loading (ETL).
-
-    This class defines the core components of an ETL job and provides a standard
-    interface for different engine implementations.
+    Job class to perform data extraction, transformations and loading (ETL).
     """
-
-    extract_concrete: type[ExtractContextAbstract]
-    transform_concrete: type[TransformAbstract]
-    load_concrete: type[LoadContextAbstract]
 
     def __init__(
         self,
-        engine: Engine,
-        extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]],
-        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
-        loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]],
+        extracts: list[Extract],
+        transforms: list[Transform],
+        loads: list[Load],
     ) -> None:
         """
         Initialize Job instance.
 
         Args:
-            engine: The engine type to use for processing.
-            extracts: List of extract operations to perform.
-            transforms: List of transform operations to perform.
-            loads: List of load operations to perform.
+            engine (OptionsEngine): Engine type.
+            extracts (list[Extract]): Extract modelifications.
+            transforms (list[Transform]): Transform modelifications.
+            loads (list[Load]): Load modelifications.
         """
-        self.engine = engine
         self.extracts = extracts
         self.transforms = transforms
         self.loads = loads
 
     @property
-    def engine(self) -> Engine:
-        return self._engine
-
-    @engine.setter
-    def engine(self, value: Engine) -> None:
-        self._engine = value
-
-    @property
-    def extracts(self) -> list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]:
+    def extracts(self) -> list[Extract]:
         return self._extracts
 
     @extracts.setter
-    def extracts(self, value: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]]) -> None:
+    def extracts(self, value: list[Extract]) -> None:
         self._extracts = value
 
     @property
-    def transforms(
-        self,
-    ) -> list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]]:
+    def transforms(self) -> list[Transform]:
         return self._transforms
 
     @transforms.setter
-    def transforms(
-        self,
-        value: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]],
-    ) -> None:
+    def transforms(self, value: list[Transform]) -> None:
         self._transforms = value
 
     @property
-    def loads(
-        self,
-    ) -> list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]:
+    def loads(self) -> list[Load]:
         return self._loads
 
     @loads.setter
-    def loads(self, value: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]]) -> None:
+    def loads(self, value: list[Load]) -> None:
         self._loads = value
+
+    @classmethod
+    def from_file(cls, filepath: Path) -> Self:
+        """
+        Get the job modelifications from confeti.
+
+        Args:
+            filepath (str): path to file.
+
+        Returns:
+            Job: job instance.
+        """
+        handler = FileHandlerContext.from_filepath(filepath=filepath)
+        file: dict[str, Any] = handler.read()
+
+        if Path(filepath).suffix == ".json":
+            return cls.from_confeti(confeti=file)
+
+        raise NotImplementedError("No handling options found.")
 
     @classmethod
     def from_confeti(cls, confeti: dict[str, Any]) -> Self:
         """
-        Create a job instance from configuration dictionary.
+        Get the job modelifications from confeti.
 
         Args:
-            confeti: Configuration dictionary containing job specifications.
-                Must contain 'engine' and 'extracts' keys, and optionally
-                'transforms' and 'loads' keys.
+            confeti (dict[str, Any]): dictionary object.
 
         Returns:
-            A new instance of the job class.
-
-        Raises:
-            DictKeyError: If required keys are missing from the configuration.
-            ValueError: If the engine in the configuration is not supported.
+            Job: job instance.
         """
-        extracts: list[ExtractAbstract[ExtractModelAbstract, DataFrameT]] = []
-        transforms: list[TransformAbstract[TransformModelAbstract, FunctionAbstract, DataFrameT]] = []
-        loads: list[LoadAbstract[LoadModelAbstract, DataFrameT, StreamingQueryT]] = []
-
         try:
-            engine = Engine(confeti[ENGINE])
+            extracts: list[Extract] = []
+            for extract_confeti in confeti[EXTRACTS]:
+                extract = Extract.from_confeti(confeti=extract_confeti)
+                extracts.append(extract)
+
+            transforms: list[Transform] = []
+            for transform_confeti in confeti[TRANSFORMS]:
+                transform = Transform.from_confeti(confeti=transform_confeti)
+                transforms.append(transform)
+
+            loads: list[Load] = []
+            for load_confeti in confeti[LOADS]:
+                load = Load.from_confeti(confeti=load_confeti)
+                loads.append(load)
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
-        # Don't use registry here to avoid circular dependency
-        # The subclass will handle its own instantiation
-        for extract in confeti[EXTRACTS]:
-            extract_cls = cls.extract_concrete.factory(extract)
-            extract_instance = extract_cls.from_confeti(extract)
-            extracts.append(extract_instance)
-
-        for transform in confeti.get(TRANSFORMS, []):
-            transform_instance = cls.transform_concrete.from_confeti(transform)
-            transforms.append(transform_instance)
-
-        for load in confeti.get(LOADS, []):
-            load_class = cls.load_concrete.factory(load)
-            load_instance = load_class.from_confeti(load)
-            loads.append(load_instance)
-
-        return cls(engine, extracts, transforms, loads)
+        return cls(transforms=transforms, extracts=extracts, loads=loads)
 
     def execute(self) -> None:
         """
         Extract data into a DataFrame, transform the DataFrame, then load the DataFrame.
         """
+        self._extract()
+        self._transform()
+        self._load()
+
+    def _extract(self) -> None:
+        """
+        Extract data from modelification into a DataFrame.
+        """
         for extract in self.extracts:
             extract.extract()
 
-        for transform in self.transforms:
-            transform.transform()
-
-        for load in self.loads:
-            load.load()
-
-
-class JobRegistry(DecoratorRegistrySingleton[Engine, JobAbstract]):
-    """
-    Registry for Job implementations.
-
-    Maps JobFormat enum values to concrete JobAbstract implementations.
-    """
-
-
-class JobContext:
-    """
-    Factory class to create JobModel instances.
-    """
-
-    @staticmethod
-    def from_confeti(confeti: dict[str, Any]) -> type[JobAbstract]:
+    def _transform(self) -> None:
         """
-        Create an appropriate job class based on the format specified in the configuration.
-
-        This factory method uses the JobRegistry to look up the appropriate
-        implementation class based on the data format.
+        Transform data from modelifiction.
 
         Args:
-            confeti: Configuration dictionary that must include a 'data_format' key
-                compatible with the JobFormat enum
+            df (DataFrame): Dataframe to be transformed.
 
         Returns:
-            The concrete jobion class for the specified format
-
-        Raises:
-            NotImplementedError: If the specified job format is not supported
-            KeyError: If the 'data_format' key is missing from the configuration
+            DataFrame: transformed data.
         """
-        try:
-            engine = Engine(confeti[ENGINE])
-            return JobRegistry.get(engine)
-        except KeyError as e:
-            format_name = confeti.get(ENGINE, "<missing>")
-            raise NotImplementedError(f"Job format {format_name} is not supported.") from e
+        for transform in self.transforms:
+            transform.data_registry[transform.model.name] = transform.data_registry[transform.model.upstream_name]
+            transform.transform()
+
+    def _load(self) -> None:
+        """
+        Load data to the modelification.
+
+        Returns:
+            DataFrame: The loaded data.
+        """
+        for load in self.loads:
+            load.data_registry[load.model.name] = load.data_registry[load.model.upstream_name]
+            load.load()

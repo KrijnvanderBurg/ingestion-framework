@@ -1,4 +1,4 @@
-from typing import Any, TypeVar
+from typing import Any, Dict, TypeVar
 
 K = TypeVar("K")  # Key type
 
@@ -10,7 +10,7 @@ class DictKeyError(KeyError):
     Provides a more informative error message that shows the available keys.
     """
 
-    def __init__(self, key: K, dict_: dict[K, Any]) -> None:
+    def __init__(self, key: K, dict_: Dict[K, Any]) -> None:
         """
         Initialize a DictKeyError.
 

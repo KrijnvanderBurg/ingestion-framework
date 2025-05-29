@@ -8,13 +8,13 @@ using various function registrations.
 from abc import ABC
 from typing import Any, Final, Generic, Self, TypeVar
 
-from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.functions import FunctionAbstract
 from ingestion_framework.types import (
     DataFramePysparkRegistry,
     DataFrameT,
     DecoratorRegistrySingleton,
 )
+from ingestion_framework2.exceptions import DictKeyError
+from ingestion_framework2.functions import FunctionAbstract
 
 FUNCTIONS: Final[str] = "functions"
 FUNCTION: Final[str] = "function"

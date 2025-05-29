@@ -8,11 +8,8 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any, Self
 
-from pyspark.sql import DataFrame as DataFramePyspark
-from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
-
-from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.load import (
+from ingestion_framework2.exceptions import DictKeyError
+from ingestion_framework2.load import (
     DATA_FORMAT,
     LOCATION,
     METHOD,
@@ -31,7 +28,10 @@ from ingestion_framework.load import (
     LoadModelFileAbstract,
     LoadRegistry,
 )
-from ingestion_framework.utils.spark_handler import SparkHandler
+from pyspark.sql import DataFrame as DataFramePyspark
+from pyspark.sql.streaming.query import StreamingQuery as StreamingQueryPyspark
+
+from ingestion_framework.utils.spark import SparkHandler
 
 
 class LoadModelPyspark(LoadModelAbstract, ABC):

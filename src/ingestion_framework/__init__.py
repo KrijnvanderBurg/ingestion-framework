@@ -9,9 +9,3 @@ __license__ = "Creative Commons BY-NC-ND 4.0 DEED Attribution-NonCommercial-NoDe
 __maintainer__ = "Krijn van der Burg"
 __email__ = ""
 __status__ = "Prototype"
-
-from ingestion_framework.pyspark.job import JobPyspark
-
-__all__ = [
-    "JobPyspark",
-]
