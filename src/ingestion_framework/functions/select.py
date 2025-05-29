@@ -10,26 +10,13 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.function import (
-    Args,
-    ArgsT,
-    Function,
-    FunctionModel,
-    FunctionModelT,
-)
+from ingestion_framework.functions import Args, Function, FunctionModel
 from ingestion_framework.types import DataFrameRegistry
 
 COLUMNS: Final[str] = "columns"
 
 
-class SelectFunctionModel(FunctionModel[ArgsT], ABC):
-    """An abstract base class for DataFrame Select functions."""
-
-    class Args(Args, ABC):
-        """An abstract base class for arguments of Select functions."""
-
-
-class SelectFunctionModelArgs(SelectFunctionModel.Args):
+class SelectFunctionModelArgs(Args):
     """The arguments for  DataFrame Select functions."""
 
     def __init__(self, columns: list[Column]) -> None:
@@ -64,26 +51,16 @@ class SelectFunctionModelArgs(SelectFunctionModel.Args):
         return cls(columns=columns)
 
 
-class SelectFunctionModel(SelectFunctionModel[SelectFunctionModelArgs]):
+class SelectFunctionModel(FunctionModel[SelectFunctionModelArgs]):
     """A concrete implementation of DataFrame Select functions using ."""
 
     args_concrete = SelectFunctionModelArgs
 
-
-class SelectFunction(Function[FunctionModelT], ABC):
-    """
-    Encapsulates column transformation logic for  DataFrames.
-
-    Attributes:
-        model (...): The SelectModel object containing the Selecting information.
-
-    Methods:
-        from_confeti(confeti: dict[str, Any]) -> Self: Create SelectTransform object from json.
-        transform() -> Callable: Selects column(s) to new type.
-    """
+    class Args(Args, ABC):
+        """An abstract base class for arguments of Select functions."""
 
 
-class SelectFunction(SelectFunction[SelectFunctionModel], Function):
+class SelectFunction(Function[SelectFunctionModel]):
     """
     Encapsulates column transformation logic for  DataFrames.
 

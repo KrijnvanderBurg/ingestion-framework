@@ -6,15 +6,14 @@ This module provides concrete implementations for transforming data using PySpar
 
 from abc import ABC
 
-from pyspark.sql import DataFrame as DataFramePyspark
-
-from ingestion_framework2.pyspark.function import FunctionPyspark
+from ingestion_framework2.pyspark.function import Function
 from ingestion_framework2.pyspark.functions.select import SelectFunctionPyspark
 from ingestion_framework2.transform import (
     TransformAbstract,
     TransformModelAbstract,
     TransformRegistry,
 )
+from pyspark.sql import DataFrame as DataFramePyspark
 
 
 class TransformModelPyspark(TransformModelAbstract):
@@ -33,7 +32,7 @@ class TransformModelPyspark(TransformModelAbstract):
 
 
 @TransformRegistry.register("default")
-class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark, DataFramePyspark], ABC):
+class TransformPyspark(TransformAbstract[TransformModelPyspark, Function, DataFramePyspark], ABC):
     """
     Concrete implementation for PySpark DataFrame transformation.
 
@@ -41,6 +40,6 @@ class TransformPyspark(TransformAbstract[TransformModelPyspark, FunctionPyspark,
     """
 
     load_model_concrete = TransformModelPyspark
-    SUPPORTED_FUNCTIONS: dict[str, type[FunctionPyspark]] = {
+    SUPPORTED_FUNCTIONS: dict[str, type[Function]] = {
         "select": SelectFunctionPyspark,
     }
