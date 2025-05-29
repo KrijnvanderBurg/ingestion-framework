@@ -59,14 +59,11 @@ class TestSchemaHandlers:
         Args:
             schema_dict: Dictionary representation of a schema.
         """
-        # Arrange
-        handler = SchemaDictHandler(schema=schema_dict)
-
         # Act
-        result = handler.parse()
+        schema = SchemaDictHandler.parse(schema=schema_dict)
 
         # Assert
-        assert result.jsonValue() == schema_dict
+        assert schema.jsonValue() == schema_dict
 
     def test_schema_dict_handler_invalid_dict(self) -> None:
         """
@@ -74,12 +71,9 @@ class TestSchemaHandlers:
 
         Verifies that proper validation happens when an invalid schema is provided.
         """
-        # Arrange
-        handler = SchemaDictHandler(schema={"invalid": "schema"})
-
         # Act & Assert
         with pytest.raises(ValueError):
-            handler.parse()
+            SchemaDictHandler.parse(schema={"invalid": "schema"})
 
     def test_schema_string_handler_parse(self, schema_json_str: str, schema_struct: StructType) -> None:
         """
@@ -89,14 +83,11 @@ class TestSchemaHandlers:
             schema_json_str: JSON string representation of a schema.
             schema_struct: Expected StructType schema.
         """
-        # Arrange
-        handler = SchemaStringHandler(schema=schema_json_str)
+        # Act
+        schema = SchemaStringHandler.parse(schema=schema_json_str)
 
         # Act
-        result = handler.parse()
-
-        # Assert
-        assert result.json() == schema_struct.json()
+        assert schema.json() == schema_struct.json()
 
     def test_schema_string_handler_invalid_json(self) -> None:
         """
@@ -106,11 +97,10 @@ class TestSchemaHandlers:
         """
         # Arrange
         invalid_json = '{"name": "John" "age": 30}'  # Missing comma makes it invalid JSON
-        handler = SchemaStringHandler(schema=invalid_json)
 
         # Act & Assert
         with pytest.raises(ValueError):
-            handler.parse()
+            SchemaStringHandler.parse(schema=invalid_json)
 
     def test_schema_filepath_handler_parse(self, schema_dict: dict) -> None:
         """
@@ -125,15 +115,12 @@ class TestSchemaHandlers:
             mock_file_handler = mock_file_handler_context.return_value
             mock_file_handler.read.return_value = schema_dict
 
-            handler = SchemaFilepathHandler(schema=file_path)
-
-            # Act
-            result = handler.parse()
+            schema = SchemaFilepathHandler.parse(schema=file_path)
 
             # Assert
             mock_file_handler_context.assert_called_once_with(filepath=file_path)
             mock_file_handler.read.assert_called_once()
-            assert result.jsonValue() == schema_dict
+            assert schema.jsonValue() == schema_dict
 
     def test_schema_filepath_handler_file_not_found(self) -> None:
         """
@@ -147,11 +134,9 @@ class TestSchemaHandlers:
             mock_file_handler = mock_file_handler_context.return_value
             mock_file_handler.read.side_effect = FileNotFoundError("File not found")
 
-            handler = SchemaFilepathHandler(schema=file_path)
-
             # Act & Assert
             with pytest.raises(FileNotFoundError):
-                handler.parse()
+                SchemaFilepathHandler.parse(schema=file_path)
 
     def test_schema_filepath_handler_permission_error(self) -> None:
         """
@@ -165,11 +150,8 @@ class TestSchemaHandlers:
             mock_file_handler = mock_file_handler_context.return_value
             mock_file_handler.read.side_effect = PermissionError("Permission denied")
 
-            handler = SchemaFilepathHandler(schema=file_path)
-
-            # Act & Assert
             with pytest.raises(PermissionError):
-                handler.parse()
+                SchemaFilepathHandler.parse(schema=file_path)
 
     def test_schema_filepath_handler_invalid_json(self) -> None:
         """
@@ -183,8 +165,6 @@ class TestSchemaHandlers:
             mock_file_handler = mock_file_handler_context.return_value
             mock_file_handler.read.return_value = {"invalid": "schema"}
 
-            handler = SchemaFilepathHandler(schema=file_path)
-
             # Act & Assert
             with pytest.raises(ValueError):
-                handler.parse()
+                SchemaFilepathHandler.parse(schema=file_path)
