@@ -9,7 +9,7 @@ from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import Extract, ExtractContext
 from ingestion_framework.function import Function
 from ingestion_framework.load import Load, LoadContext, LoadModel
-from ingestion_framework.transform import Transform, TransformModel
+from ingestion_framework.transform import Transform
 from ingestion_framework.utils.file import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
@@ -108,7 +108,7 @@ class Job(Generic[LoadT]):
 
             transforms: list = []
             for transform_confeti in confeti[TRANSFORMS]:
-                transform_class = Transform[TransformModel, Function]
+                transform_class = Transform[Function]
                 transform = transform_class.from_confeti(confeti=transform_confeti)
                 transforms.append(transform)
 
