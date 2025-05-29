@@ -383,6 +383,7 @@ class Transform(Generic[FunctionT]):
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
 
 
-# Import transform functions to ensure they get registered
-# We do this at the end of the file to avoid circular imports
-from ingestion_framework.transforms.select import SelectFunction  # noqa: E402, F401
+# TODO
+# Import transform functions here to register them with TransformFunctionRegistry
+# This needs to be at the end to avoid circular imports
+import ingestion_framework.transforms.select  # noqa
