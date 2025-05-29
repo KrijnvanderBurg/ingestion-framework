@@ -19,7 +19,7 @@ from ingestion_framework.utils.spark import SparkHandler
 
 
 # https://learn.microsoft.com/en-us/azure/databricks/sql/language-manual/functions/cast
-@pytest.mark.parametrize("confeti_path", glob.glob("tests/**/confeti.json", recursive=True))
+@pytest.mark.parametrize("confeti_path", glob.glob("tests/e2e/**/confeti.json", recursive=True))
 def test__main(tmp_path: Path, confeti_path: str) -> None:
     """Test main function with different configurations."""
     # Arrange

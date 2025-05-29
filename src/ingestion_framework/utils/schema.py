@@ -8,6 +8,7 @@ sources like JSON strings, dictionaries, and files with a common interface.
 import json
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 from pyspark.sql.types import StructType
 
@@ -82,7 +83,7 @@ class SchemaFilepathHandler(SchemaHandler):
     """Handles schema creation from files."""
 
     @staticmethod
-    def parse(schema) -> StructType:
+    def parse(schema: Path) -> StructType:
         """
         Loads a schema from a file.
 

@@ -6,6 +6,7 @@ This module provides concrete implementations for extracting data using PySpark.
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from pathlib import Path
 from typing import Any, Final, Generic, Self, TypeVar
 
 from pyspark.sql import DataFrame
@@ -284,7 +285,7 @@ class ExtractModelFile(ExtractModel):
             data_format = ExtractFormat(confeti[DATA_FORMAT])
             location = confeti[LOCATION]
             options = confeti[OPTIONS]
-            schema = SchemaFilepathHandler.parse(schema=confeti[SCHEMA])
+            schema = SchemaFilepathHandler.parse(schema=Path(confeti[SCHEMA]))
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
