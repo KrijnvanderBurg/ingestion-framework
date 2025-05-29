@@ -10,7 +10,9 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transform import Args, Function, FunctionModel
+
+# Import these locally to avoid circular imports
+from ingestion_framework.transform import Args, Function, FunctionModel, TransformFunctionRegistry
 from ingestion_framework.types import DataFrameRegistry
 
 COLUMNS: Final[str] = "columns"
@@ -60,9 +62,10 @@ class SelectFunctionModel(FunctionModel[SelectFunctionModelArgs]):
         """An abstract base class for arguments of Select functions."""
 
 
+@TransformFunctionRegistry.register("select")
 class SelectFunction(Function[SelectFunctionModel]):
     """
-    Encapsulates column transformation logic for  DataFrames.
+    Encapsulates column transformation logic for DataFrames.
 
     Attributes:
         model (...): The SelectModel object containing the Selecting information.

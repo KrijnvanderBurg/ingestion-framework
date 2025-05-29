@@ -9,7 +9,6 @@ from collections.abc import Callable
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.transforms.select import SelectFunction
 from ingestion_framework.types import DataFrameRegistry, RegistryDecorator, Singleton
 
 FUNCTIONS: Final[str] = "functions"
@@ -120,6 +119,14 @@ class FunctionModel(Generic[ArgsT], ABC):
 FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModel)
 
 
+class TransformFunctionRegistry(RegistryDecorator, metaclass=Singleton):
+    """
+    Registry for Transform Function implementations.
+
+    Maps function names to concrete Function implementations.
+    """
+
+
 class Function(Generic[FunctionModelT], ABC):
     """
      base class for transformation functions.
@@ -195,9 +202,9 @@ FunctionT = TypeVar("FunctionT", bound=Function)
 
 class TransformRegistry(RegistryDecorator, metaclass=Singleton):
     """
-    Registry for Extract implementations.
+    Registry for Transform implementations.
 
-    Maps ExtractFormat enum values to concrete ExtractAbstract implementations.
+    Maps transform enum values to concrete transform implementations.
     """
 
 
@@ -291,14 +298,10 @@ class TransformModel:
 
 class Transform(Generic[FunctionT]):
     """
-    Concrete implementation for  DataFrame transformation.
+    Concrete implementation for DataFrame transformation.
 
-    This class provides -specific functionality for transforming data.
+    This class provides functionality for transforming data.
     """
-
-    SUPPORTED_FUNCTIONS: dict[str, type[Function[Any]]] = {
-        "select": SelectFunction,
-    }
 
     def __init__(self, model: TransformModel, functions: list[FunctionT]) -> None:
         self.model = model
@@ -351,12 +354,12 @@ class Transform(Generic[FunctionT]):
         for function_confeti in confeti.get(FUNCTIONS, []):
             function_name: str = function_confeti[FUNCTION]
 
-            if function_name not in cls.SUPPORTED_FUNCTIONS:
+            try:
+                function_concrete = TransformFunctionRegistry.get(function_name)
+                function_instance = function_concrete.from_confeti(confeti=function_confeti)
+                functions.append(function_instance)
+            except KeyError:
                 raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
-
-            function_concrete = cls.SUPPORTED_FUNCTIONS[function_name]
-            function_instance = function_concrete.from_confeti(confeti=function_confeti)
-            functions.append(function_instance)
 
         return cls(model=model, functions=functions)
 
@@ -378,3 +381,8 @@ class Transform(Generic[FunctionT]):
         # Apply transformations sequentially
         for function in self.functions:
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
+
+
+# Import transform functions to ensure they get registered
+# We do this at the end of the file to avoid circular imports
+from ingestion_framework.transforms.select import SelectFunction  # noqa: E402, F401

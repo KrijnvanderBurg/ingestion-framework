@@ -419,9 +419,10 @@ class LoadContext:
             NotImplementedError: If the specified load format is not supported
             KeyError: If the 'data_format' key is missing from the configuration
         """
+        data_format = confeti[DATA_FORMAT]
+
         try:
-            load_format = LoadFormat(confeti[DATA_FORMAT])
+            load_format = LoadFormat(data_format)
             return LoadRegistry.get(load_format)
         except KeyError as e:
-            format_name = confeti.get(DATA_FORMAT, "<missing>")
-            raise NotImplementedError(f"Load format {format_name} is not supported.") from e
+            raise NotImplementedError(f"Load format {data_format} is not supported.") from e
