@@ -10,7 +10,7 @@ from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.function import Args, Function, FunctionModel
+from ingestion_framework.transform import Args, Function, FunctionModel
 from ingestion_framework.types import DataFrameRegistry
 
 COLUMNS: Final[str] = "columns"

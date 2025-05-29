@@ -7,9 +7,8 @@ from typing import Any, Final, Self
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import Extract, ExtractContext
-from ingestion_framework.function import Function
 from ingestion_framework.load import Load, LoadContext
-from ingestion_framework.transform import Transform
+from ingestion_framework.transform import Function, Transform
 from ingestion_framework.utils.file import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
