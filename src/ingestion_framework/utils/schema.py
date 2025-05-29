@@ -22,8 +22,8 @@ class SchemaHandler(ABC):
     Base schema handler class for creating PySpark schemas.
     """
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def parse(schema) -> StructType:
         """
         Create a PySpark schema from the source.
