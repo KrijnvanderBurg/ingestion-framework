@@ -7,8 +7,9 @@ from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import Extract, ExtractContext
+from ingestion_framework.function import Function
 from ingestion_framework.load import Load, LoadContext, LoadModel
-from ingestion_framework.transform import Transform
+from ingestion_framework.transform import Transform, TransformModel
 from ingestion_framework.utils.file import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
@@ -99,15 +100,16 @@ class Job(Generic[LoadT]):
             Job: job instance.
         """
         try:
-            extracts: list[Extract] = []
+            extracts: list = []
             for extract_confeti in confeti[EXTRACTS]:
                 extract_class = ExtractContext.factory(confeti=extract_confeti)
                 extract = extract_class.from_confeti(confeti=extract_confeti)
                 extracts.append(extract)
 
-            transforms: list[Transform] = []
+            transforms: list = []
             for transform_confeti in confeti[TRANSFORMS]:
-                transform = Transform.from_confeti(confeti=transform_confeti)
+                transform_class = Transform[TransformModel, Function]
+                transform = transform_class.from_confeti(confeti=transform_confeti)
                 transforms.append(transform)
 
             loads: list = []

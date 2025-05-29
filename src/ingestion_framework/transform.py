@@ -4,7 +4,6 @@
 This module provides concrete implementations for transforming data using .
 """
 
-from abc import ABC
 from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
@@ -118,32 +117,28 @@ class TransformModel:
         return cls(name=name, upstream_name=upstream_name)
 
 
-TransformModelT = TypeVar("TransformModelT", bound=TransformModel)
-
-
-class Transform(Generic[TransformModelT, FunctionT], ABC):
+class Transform(Generic[FunctionT]):
     """
     Concrete implementation for  DataFrame transformation.
 
     This class provides -specific functionality for transforming data.
     """
 
-    load_model_concrete = TransformModel
     SUPPORTED_FUNCTIONS: dict[str, type[Function]] = {
         "select": SelectFunction,
     }
 
-    def __init__(self, model: TransformModelT, functions: list[FunctionT]) -> None:
+    def __init__(self, model: TransformModel, functions: list[FunctionT]) -> None:
         self.model = model
         self.functions = functions
         self.data_registry = DataFrameRegistry()
 
     @property
-    def model(self) -> TransformModelT:
+    def model(self) -> TransformModel:
         return self._model
 
     @model.setter
-    def model(self, value: TransformModelT) -> None:
+    def model(self, value: TransformModel) -> None:
         self._model = value
 
     @property
@@ -178,8 +173,8 @@ class Transform(Generic[TransformModelT, FunctionT], ABC):
             DictKeyError: If required keys are missing from the configuration.
             NotImplementedError: If a specified function is not supported.
         """
-        model: TransformModelT = cls.load_model_concrete.from_confeti(confeti=confeti)
-        functions: list[FunctionT] = []
+        model = TransformModel.from_confeti(confeti=confeti)
+        functions: list = []
 
         for function_confeti in confeti.get(FUNCTIONS, []):
             function_name: str = function_confeti[FUNCTION]
@@ -187,7 +182,7 @@ class Transform(Generic[TransformModelT, FunctionT], ABC):
             if function_name not in cls.SUPPORTED_FUNCTIONS:
                 raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.")
 
-            function_concrete: type[FunctionT] = cls.SUPPORTED_FUNCTIONS[function_name]
+            function_concrete = cls.SUPPORTED_FUNCTIONS[function_name]
             function_instance = function_concrete.from_confeti(confeti=function_confeti)
             functions.append(function_instance)
 
