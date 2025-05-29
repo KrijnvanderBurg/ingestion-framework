@@ -3,12 +3,12 @@ Job class.
 """
 
 from pathlib import Path
-from typing import Any, Final, Generic, Self, TypeVar
+from typing import Any, Final, Self
 
 from ingestion_framework.exceptions import DictKeyError
 from ingestion_framework.extract import Extract, ExtractContext
 from ingestion_framework.function import Function
-from ingestion_framework.load import Load, LoadContext, LoadModel
+from ingestion_framework.load import Load, LoadContext
 from ingestion_framework.transform import Transform
 from ingestion_framework.utils.file import FileHandlerContext
 
@@ -18,10 +18,7 @@ TRANSFORMS: Final[str] = "transforms"
 LOADS: Final[str] = "loads"
 
 
-LoadT = TypeVar("LoadT", bound=Load[LoadModel])
-
-
-class Job(Generic[LoadT]):
+class Job:
     """
     Job class to perform data extraction, transformations and loading (ETL).
     """
@@ -30,7 +27,7 @@ class Job(Generic[LoadT]):
         self,
         extracts: list[Extract],
         transforms: list[Transform],
-        loads: list[LoadT],
+        loads: list[Load],
     ) -> None:
         """
         Initialize Job instance.
@@ -62,11 +59,11 @@ class Job(Generic[LoadT]):
         self._transforms = value
 
     @property
-    def loads(self) -> list[LoadT]:
+    def loads(self) -> list[Load]:
         return self._loads
 
     @loads.setter
-    def loads(self, value: list[LoadT]) -> None:
+    def loads(self, value: list[Load]) -> None:
         self._loads = value
 
     @classmethod
