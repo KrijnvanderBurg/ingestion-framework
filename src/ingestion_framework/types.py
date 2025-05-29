@@ -17,6 +17,7 @@ from collections.abc import Callable, Iterator
 from typing import Any, Generic, TypeVar
 
 from pyspark.sql import DataFrame
+from pyspark.sql.streaming.query import StreamingQuery
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -143,5 +144,9 @@ class RegistryInstance(Generic[K, V], metaclass=Singleton):
         return iter(self._items.values())
 
 
-class DataFrameRegistry(RegistryDecorator[str, DataFrame]):
-    """A registry for DataFrame or StreamingQuery classes."""
+class DataFrameRegistry(RegistryInstance[str, DataFrame]):
+    """A registry for DataFrame objects."""
+
+
+class StreamingQueryRegistry(RegistryInstance[str, StreamingQuery]):
+    """A registry for StreamingQuery objects."""

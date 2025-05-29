@@ -3,11 +3,11 @@ Job class.
 """
 
 from pathlib import Path
-from typing import Any, Final, Self
+from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.extract import Extract
-from ingestion_framework.load import Load
+from ingestion_framework.extract import Extract, ExtractContext
+from ingestion_framework.load import Load, LoadContext, LoadModel
 from ingestion_framework.transform import Transform
 from ingestion_framework.utils.file import FileHandlerContext
 
@@ -17,7 +17,10 @@ TRANSFORMS: Final[str] = "transforms"
 LOADS: Final[str] = "loads"
 
 
-class Job:
+LoadT = TypeVar("LoadT", bound=Load[LoadModel])
+
+
+class Job(Generic[LoadT]):
     """
     Job class to perform data extraction, transformations and loading (ETL).
     """
@@ -26,7 +29,7 @@ class Job:
         self,
         extracts: list[Extract],
         transforms: list[Transform],
-        loads: list[Load],
+        loads: list[LoadT],
     ) -> None:
         """
         Initialize Job instance.
@@ -58,11 +61,11 @@ class Job:
         self._transforms = value
 
     @property
-    def loads(self) -> list[Load]:
+    def loads(self) -> list[LoadT]:
         return self._loads
 
     @loads.setter
-    def loads(self, value: list[Load]) -> None:
+    def loads(self, value: list[LoadT]) -> None:
         self._loads = value
 
     @classmethod
@@ -98,7 +101,8 @@ class Job:
         try:
             extracts: list[Extract] = []
             for extract_confeti in confeti[EXTRACTS]:
-                extract = Extract.from_confeti(confeti=extract_confeti)
+                extract_class = ExtractContext.factory(confeti=extract_confeti)
+                extract = extract_class.from_confeti(confeti=extract_confeti)
                 extracts.append(extract)
 
             transforms: list[Transform] = []
@@ -106,14 +110,15 @@ class Job:
                 transform = Transform.from_confeti(confeti=transform_confeti)
                 transforms.append(transform)
 
-            loads: list[Load] = []
+            loads: list = []
             for load_confeti in confeti[LOADS]:
-                load = Load.from_confeti(confeti=load_confeti)
+                load_class = LoadContext.factory(confeti=load_confeti)
+                load = load_class.from_confeti(confeti=load_confeti)
                 loads.append(load)
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=confeti) from e
 
-        return cls(transforms=transforms, extracts=extracts, loads=loads)
+        return cls(extracts=extracts, transforms=transforms, loads=loads)
 
     def execute(self) -> None:
         """
