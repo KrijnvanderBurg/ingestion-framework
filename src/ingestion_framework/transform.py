@@ -5,14 +5,11 @@ This module provides concrete implementations for transforming data using .
 """
 
 from abc import ABC
-from typing import Any, Final, Self, TypeVar
-
-from pyspark.sql import DataFrame as DataFrame
+from typing import Any, Final, Generic, Self, TypeVar
 
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.functions import Function
+from ingestion_framework.function import Function
 from ingestion_framework.functions.select import SelectFunction
-from ingestion_framework.transform import Transform
 from ingestion_framework.types import DataFrameRegistry, RegistryDecorator, Singleton
 
 FUNCTIONS: Final[str] = "functions"
@@ -124,7 +121,7 @@ class TransformModel:
 TransformModelT = TypeVar("TransformModelT", bound=TransformModel)
 
 
-class Transform(TransformAbstract[TransformModel, Function, DataFrame], ABC):
+class Transform(Generic[TransformModelT, FunctionT], ABC):
     """
     Concrete implementation for  DataFrame transformation.
 

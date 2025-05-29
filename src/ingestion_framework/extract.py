@@ -196,7 +196,8 @@ class Extract(Generic[ExtractModelT]):
         """
         Main extraction method.
         """
-        SparkHandler().add_configs(options=self.model.options)
+        spark_handler: SparkHandler = SparkHandler()
+        spark_handler.add_configs(options=self.model.options)
 
         if self.model.method == ExtractMethod.BATCH:
             self.data_registry[self.model.name] = self._extract_batch()
