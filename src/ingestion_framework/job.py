@@ -2,6 +2,7 @@
 Job class.
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Final, Self
 
@@ -17,53 +18,21 @@ TRANSFORMS: Final[str] = "transforms"
 LOADS: Final[str] = "loads"
 
 
+@dataclass
 class Job:
     """
     Job class to perform data extraction, transformations and loading (ETL).
+
+    Args:
+        engine (OptionsEngine): Engine type.
+        extracts (list[Extract]): Extract modelifications.
+        transforms (list[Transform]): Transform modelifications.
+        loads (list[Load]): Load modelifications.
     """
 
-    def __init__(
-        self,
-        extracts: list[Extract],
-        transforms: list[Transform],
-        loads: list[Load],
-    ) -> None:
-        """
-        Initialize Job instance.
-
-        Args:
-            engine (OptionsEngine): Engine type.
-            extracts (list[Extract]): Extract modelifications.
-            transforms (list[Transform]): Transform modelifications.
-            loads (list[Load]): Load modelifications.
-        """
-        self.extracts = extracts
-        self.transforms = transforms
-        self.loads = loads
-
-    @property
-    def extracts(self) -> list[Extract]:
-        return self._extracts
-
-    @extracts.setter
-    def extracts(self, value: list[Extract]) -> None:
-        self._extracts = value
-
-    @property
-    def transforms(self) -> list[Transform]:
-        return self._transforms
-
-    @transforms.setter
-    def transforms(self, value: list[Transform]) -> None:
-        self._transforms = value
-
-    @property
-    def loads(self) -> list[Load]:
-        return self._loads
-
-    @loads.setter
-    def loads(self, value: list[Load]) -> None:
-        self._loads = value
+    extracts: list[Extract]
+    transforms: list[Transform]
+    loads: list[Load]
 
     @classmethod
     def from_file(cls, filepath: Path) -> Self:
