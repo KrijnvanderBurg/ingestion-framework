@@ -160,12 +160,12 @@ class LoadModel(ABC):
 
     @classmethod
     @abstractmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> Self:
+    def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """
         Create a loading model from a configuration dictionary.
 
         Args:
-            confeti: Configuration dictionary containing loading parameters
+            dict_: Configuration dictionary containing loading parameters
 
         Returns:
             An initialized loading model
@@ -217,12 +217,12 @@ class Load(Generic[LoadModelT], ABC):
         self._data_registry = value
 
     @classmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> Self:
+    def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """
         Create a loading instance from a configuration dictionary.
 
         Args:
-            confeti: Configuration dictionary containing loading specifications
+            dict_: Configuration dictionary containing loading specifications
 
         Returns:
             An initialized loading instance
@@ -230,7 +230,7 @@ class Load(Generic[LoadModelT], ABC):
         Raises:
             DictKeyError: If required keys are missing from the configuration
         """
-        model = cls.load_model_concrete.from_confeti(confeti=confeti)
+        model = cls.load_model_concrete.from_dict(dict_=dict_)
         return cls(model=model)
 
     @abstractmethod
@@ -322,27 +322,27 @@ class LoadModelFile(LoadModel):
         self._data_format = value
 
     @classmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> Self:
+    def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """
-        Create a LoadModelFilePyspark object from a Confeti dictionary.
+        Create a LoadModelFilePyspark object from a dict_ dictionary.
 
         Args:
-            confeti (dict[str, Any]): The Confeti dictionary.
+            dict_ (dict[str, Any]): The dict_ dictionary.
 
         Returns:
             LoadModelFilePyspark: LoadModelFilePyspark object.
         """
         try:
-            name = confeti[NAME]
-            upstream_name = confeti[UPSTREAM_NAME]
-            method = LoadMethod(confeti[METHOD])
-            mode = LoadMode(confeti[MODE])
-            data_format = LoadFormat(confeti[DATA_FORMAT])
-            location = confeti[LOCATION]
-            schema_location = confeti.get(SCHEMA_LOCATION, None)
-            options = confeti.get(OPTIONS, {})
+            name = dict_[NAME]
+            upstream_name = dict_[UPSTREAM_NAME]
+            method = LoadMethod(dict_[METHOD])
+            mode = LoadMode(dict_[MODE])
+            data_format = LoadFormat(dict_[DATA_FORMAT])
+            location = dict_[LOCATION]
+            schema_location = dict_.get(SCHEMA_LOCATION, None)
+            options = dict_.get(OPTIONS, {})
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=dict_) from e
 
         return cls(
             name=name,
@@ -401,7 +401,7 @@ class LoadContext:
     """
 
     @classmethod
-    def factory(cls, confeti: dict[str, type[Load]]) -> type[Load[LoadModel]]:
+    def factory(cls, dict_: dict[str, type[Load]]) -> type[Load[LoadModel]]:
         """
         Create an appropriate load class based on the format specified in the configuration.
 
@@ -409,7 +409,7 @@ class LoadContext:
         implementation class based on the data format.
 
         Args:
-            confeti: Configuration dictionary that must include a 'data_format' key
+            dict_: Configuration dictionary that must include a 'data_format' key
                 compatible with the LoadFormat enum
 
         Returns:
@@ -419,7 +419,7 @@ class LoadContext:
             NotImplementedError: If the specified load format is not supported
             KeyError: If the 'data_format' key is missing from the configuration
         """
-        data_format = confeti[DATA_FORMAT]
+        data_format = dict_[DATA_FORMAT]
 
         try:
             load_format = LoadFormat(data_format)

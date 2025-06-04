@@ -9,16 +9,17 @@ from typing import Any, Final, Self
 from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
+from ingestion_framework.core.transform import Function, FunctionModel, TransformFunctionRegistry
 from ingestion_framework.exceptions import DictKeyError
 
 # Import these locally to avoid circular imports
-from ingestion_framework.transform import Args, Function, FunctionModel, TransformFunctionRegistry
+from ingestion_framework.models.transform import ArgsModel
 from ingestion_framework.types import DataFrameRegistry
 
 COLUMNS: Final[str] = "columns"
 
 
-class SelectFunctionModelArgs(Args):
+class SelectFunctionModelArgs(ArgsModel):
     """The arguments for  DataFrame Select functions."""
 
     def __init__(self, columns: list[Column]) -> None:
@@ -33,22 +34,22 @@ class SelectFunctionModelArgs(Args):
         self._columns = value
 
     @classmethod
-    def from_confeti(cls, confeti: dict[str, Any]) -> Self:
+    def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """
         Create Args object from a JSON dictionary.
 
         Args:
-            confeti (dict[str, Any]): The JSON dictionary.
+            dict_ (dict[str, Any]): The JSON dictionary.
 
         Returns:
             SelectFunctionModel.Args: The Args object created from the JSON dictionary.
         """
         try:
             columns = []
-            for col_name in confeti[COLUMNS]:
+            for col_name in dict_[COLUMNS]:
                 columns.append(f.col(col_name))
         except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=confeti) from e
+            raise DictKeyError(key=e.args[0], dict_=dict_) from e
 
         return cls(columns=columns)
 
@@ -58,7 +59,7 @@ class SelectFunctionModel(FunctionModel[SelectFunctionModelArgs]):
 
     args_concrete = SelectFunctionModelArgs
 
-    class Args(Args, ABC):
+    class Args(ArgsModel, ABC):
         """An abstract base class for arguments of Select functions."""
 
 
@@ -71,7 +72,7 @@ class SelectFunction(Function[SelectFunctionModel]):
         model (...): The SelectModel object containing the Selecting information.
 
     Methods:
-        from_confeti(confeti: dict[str, Any]) -> Self: Create SelectTransform object from json.
+        from_dict(dict_: dict[str, Any]) -> Self: Create SelectTransform object from json.
         transform() -> Callable: Selects column(s) to new type.
     """
 
@@ -93,7 +94,7 @@ class SelectFunction(Function[SelectFunctionModel]):
             |-- age: integer (nullable = true)
             ```
 
-            Applying the confeti 'select_with_alias' function:
+            Applying the dict_ 'select_with_alias' function:
 
             ```
             {"function": "select_with_alias", "arguments": {"columns": {"age": "years_old",}}}

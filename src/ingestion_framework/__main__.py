@@ -6,7 +6,7 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 
-from ingestion_framework.job import Job
+from ingestion_framework.core.job import Job
 from ingestion_framework.utils.logger import set_logger
 
 logger: logging.Logger = set_logger(__name__)
@@ -17,7 +17,7 @@ def main() -> None:
     logger.info("Starting something...")
 
     parser = ArgumentParser(description="config driven etl.")
-    parser.add_argument("--filepath", required=True, type=str, help="confeti filepath")
+    parser.add_argument("--filepath", required=True, type=str, help="dict_ filepath")
     args = parser.parse_args()
     logger.info("args: %s", args)
 

@@ -13,7 +13,7 @@ from pyspark.sql.types import StructType
 from pyspark.testing import assertDataFrameEqual
 
 from ingestion_framework.__main__ import main
-from ingestion_framework.job import LOADS
+from ingestion_framework.core.job import LOADS
 from ingestion_framework.load import DATA_FORMAT, LOCATION, NAME, SCHEMA_LOCATION
 from ingestion_framework.utils.spark import SparkHandler
 

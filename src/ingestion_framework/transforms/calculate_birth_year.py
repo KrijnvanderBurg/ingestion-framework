@@ -36,17 +36,17 @@
 #         self.birth_year_column = arguments.get("birth_year_column", "birth_year")
 
 #     @classmethod
-#     def from_confeti(cls, confeti: dict[str, Any]) -> "CalculateBirthYearRecipe":
+#     def from_dict(cls, dict_: dict[str, Any]) -> "CalculateBirthYearRecipe":
 #         """
 #         Create a recipe instance from configuration.
 
 #         Args:
-#             confeti (dict[str, Any]): Configuration dictionary
+#             dict_ (dict[str, Any]): Configuration dictionary
 
 #         Returns:
 #             CalculateBirthYearRecipe: Configured recipe instance
 #         """
-#         arguments = confeti.get("arguments", {})
+#         arguments = dict_.get("arguments", {})
 #         return cls(arguments=arguments)
 
 #     def transform(self) -> Callable:
