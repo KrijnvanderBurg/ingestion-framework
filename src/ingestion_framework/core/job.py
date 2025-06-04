@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any, Final, Self
 
 from ingestion_framework.core.extract import Extract, ExtractContext
+from ingestion_framework.core.load import Load, LoadContext
 from ingestion_framework.core.transform import Function, Transform
 from ingestion_framework.exceptions import DictKeyError
-from ingestion_framework.load import Load, LoadContext
 from ingestion_framework.utils.file import FileHandlerContext
 
 ENGINE: Final[str] = "engine"
@@ -66,21 +66,21 @@ class Job:
         """
         try:
             extracts: list = []
-            for extract_dict_ in dict_[EXTRACTS]:
-                extract_class = ExtractContext.factory(dict_=extract_dict_)
-                extract = extract_class.from_dict(dict_=extract_dict_)
+            for extractdict_ in dict_[EXTRACTS]:
+                extract_class = ExtractContext.factory(dict_=extractdict_)
+                extract = extract_class.from_dict(dict_=extractdict_)
                 extracts.append(extract)
 
             transforms: list = []
-            for transform_dict_ in dict_[TRANSFORMS]:
+            for transformdict_ in dict_[TRANSFORMS]:
                 transform_class = Transform[Function]
-                transform = transform_class.from_dict(dict_=transform_dict_)
+                transform = transform_class.from_dict(dict_=transformdict_)
                 transforms.append(transform)
 
             loads: list = []
-            for load_dict_ in dict_[LOADS]:
-                load_class = LoadContext.factory(dict_=load_dict_)
-                load = load_class.from_dict(dict_=load_dict_)
+            for loaddict_ in dict_[LOADS]:
+                load_class = LoadContext.factory(dict_=loaddict_)
+                load = load_class.from_dict(dict_=loaddict_)
                 loads.append(load)
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=dict_) from e

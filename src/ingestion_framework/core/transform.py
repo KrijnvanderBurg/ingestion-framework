@@ -122,12 +122,12 @@ class Transform(Generic[FunctionT]):
         model = TransformModel.from_dict(dict_=dict_)
         functions: list = []
 
-        for function_dict_ in dict_.get(FUNCTIONS, []):
-            function_name: str = function_dict_[FUNCTION]
+        for functiondict_ in dict_.get(FUNCTIONS, []):
+            function_name: str = functiondict_[FUNCTION]
 
             try:
                 function_concrete = TransformFunctionRegistry.get(function_name)
-                function_instance = function_concrete.from_dict(dict_=function_dict_)
+                function_instance = function_concrete.from_dict(dict_=functiondict_)
                 functions.append(function_instance)
             except KeyError as e:
                 raise NotImplementedError(f"{FUNCTION} {function_name} is not supported.") from e
