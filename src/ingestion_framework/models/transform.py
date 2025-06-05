@@ -70,6 +70,7 @@ class FunctionModel(Model, Generic[ArgsT], ABC):
 FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModel)
 
 
+@dataclass
 class TransformModel(Model):
     """
     Modelification for  data transformation.
@@ -84,9 +85,8 @@ class TransformModel(Model):
         |-- age: string (nullable = true)
     """
 
-    def __init__(self, name: str, upstream_name: str) -> None:
-        self.name = name
-        self.upstream_name = upstream_name
+    name: str
+    upstream_name: str
 
     @classmethod
     def from_dict(cls, dict_: dict[str, Any]) -> Self:
