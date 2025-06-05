@@ -1,9 +1,8 @@
 """
-Transform functions for data processing operations.
-
-This module provides implementations for transform functions that can be applied to DataFrames.
+Transform functions for data manipulation.
 """
 
-# TransformFunctionRegistry has been moved to transform.py
+# Import all transform modules here to register them with TransformFunctionRegistry
+from ingestion_framework.core.transforms.select import SelectFunction
 
-# We'll import transform functions at the end of transform.py instead to avoid circular imports
+__all__ = ["SelectFunction"]

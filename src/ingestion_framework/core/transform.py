@@ -152,9 +152,3 @@ class Transform(Generic[FunctionT]):
         # Apply transformations sequentially
         for function in self.functions:
             function.callable_(dataframe_registry=self.data_registry, dataframe_name=self.model.name)
-
-
-# TODO
-# Import transform functions here to register them with TransformFunctionRegistry
-# This needs to be at the end to avoid circular imports
-import ingestion_framework.core.transforms.select  # noqa
