@@ -157,4 +157,4 @@ class Transform(Generic[FunctionT]):
 # TODO
 # Import transform functions here to register them with TransformFunctionRegistry
 # This needs to be at the end to avoid circular imports
-import ingestion_framework.transforms.select  # noqa
+import ingestion_framework.core.transforms.select  # noqa
