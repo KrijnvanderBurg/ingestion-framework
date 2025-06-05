@@ -55,6 +55,7 @@ class LoadFormat(Enum):
     CSV = "csv"
 
 
+@dataclass
 class LoadModel(Model, ABC):
     """
     Abstract base class for load operation models.
@@ -99,14 +100,8 @@ class LoadModel(Model, ABC):
 class LoadModelFile(LoadModel):
     """Abstract base class for file-based load models."""
 
-    name: str
-    upstream_name: str
-    method: LoadMethod
     mode: LoadMode
     data_format: LoadFormat
-    location: str
-    schema_location: str | None
-    options: dict[str, str]
 
     @classmethod
     def from_dict(cls, dict_: dict[str, Any]) -> Self:

@@ -41,6 +41,7 @@ class ExtractFormat(Enum):
     CSV = "csv"
 
 
+@dataclass
 class ExtractModel(Model):
     """
     Base model for data extraction operations.
@@ -76,9 +77,6 @@ class ExtractFileModel(ExtractModel):
         schema: Optional schema definition for the data structure
     """
 
-    name: str
-    method: ExtractMethod
-    data_format: ExtractFormat
     location: str
     options: dict[str, str]
     schema: StructType | None = None
