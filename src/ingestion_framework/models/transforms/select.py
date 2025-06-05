@@ -2,60 +2,56 @@
 Column transform function.
 """
 
-from abc import ABC
+from dataclasses import dataclass
 from typing import Any, Final, Self
 
 from pyspark.sql import functions as f
 from pyspark.sql.column import Column
 
-from ingestion_framework.core.transform import FunctionModel
 from ingestion_framework.exceptions import DictKeyError
 
 # Import these locally to avoid circular imports
-from ingestion_framework.models.transform import ArgsModel
+from ingestion_framework.models.transform import ARGUMENTS, FUNCTION, FunctionModel
 
 COLUMNS: Final[str] = "columns"
 
 
-class SelectFunctionModelArgs(ArgsModel):
-    """The arguments for  DataFrame Select functions."""
+@dataclass
+class SelectFunctionModel(FunctionModel):
+    """A concrete implementation of Select functions."""
 
-    def __init__(self, columns: list[Column]) -> None:
-        self.columns = columns
+    function: str
+    arguments: "SelectFunctionModel.Args"
 
-    @property
-    def columns(self) -> list[Column]:
-        return self._columns
+    @dataclass
+    class Args:
+        """Arguments for Select functions."""
 
-    @columns.setter
-    def columns(self, value: list[Column]) -> None:
-        self._columns = value
+        columns: list[Column]
 
     @classmethod
     def from_dict(cls, dict_: dict[str, Any]) -> Self:
         """
-        Create Args object from a JSON dictionary.
+        Create a SelectFunctionModel from a dictionary.
 
         Args:
-            dict_ (dict[str, Any]): The JSON dictionary.
+            dict_: The configuration dictionary.
 
         Returns:
-            SelectFunctionModel.Args: The Args object created from the JSON dictionary.
+            An initialized SelectFunctionModel.
         """
         try:
+            function_name = dict_[FUNCTION]
+            arguments_dict = dict_[ARGUMENTS]
+
+            # Process the arguments
             columns = []
-            for col_name in dict_[COLUMNS]:
+            for col_name in arguments_dict[COLUMNS]:
                 columns.append(f.col(col_name))
+
+            arguments = cls.Args(columns=columns)
+
         except KeyError as e:
             raise DictKeyError(key=e.args[0], dict_=dict_) from e
 
-        return cls(columns=columns)
-
-
-class SelectFunctionModel(FunctionModel[SelectFunctionModelArgs]):
-    """A concrete implementation of DataFrame Select functions using ."""
-
-    args_concrete = SelectFunctionModelArgs
-
-    class Args(ArgsModel, ABC):
-        """An abstract base class for arguments of Select functions."""
+        return cls(function=function_name, arguments=arguments)

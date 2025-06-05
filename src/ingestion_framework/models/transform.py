@@ -34,6 +34,7 @@ class ArgsModel(Model, ABC):
 ArgsT = TypeVar("ArgsT", bound=ArgsModel)
 
 
+@dataclass
 class FunctionModel(Model, Generic[ArgsT], ABC):
     """
     Model specification for transformation functions.
@@ -42,18 +43,8 @@ class FunctionModel(Model, Generic[ArgsT], ABC):
     including its name and arguments.
     """
 
-    args_concrete: type[ArgsT]
-
-    def __init__(self, function: str, arguments: ArgsT) -> None:
-        """
-        Initialize the transformation function model.
-
-        Args:
-            function: The name of the function to execute.
-            arguments: The arguments to pass to the function.
-        """
-        self.function = function
-        self.arguments = arguments
+    function: str
+    arguments: ArgsT
 
     @classmethod
     def from_dict(cls, dict_: dict[str, Any]) -> Self:
@@ -70,15 +61,10 @@ class FunctionModel(Model, Generic[ArgsT], ABC):
 
         Raises:
             DictKeyError: If required keys are missing from the configuration.
+            NotImplementedError: If the subclass doesn't override this method.
         """
-        try:
-            function_name = dict_[FUNCTION]
-            arguments_dict = dict_[ARGUMENTS]
-            arguments = cls.args_concrete.from_dict(dict_=arguments_dict)
-        except KeyError as e:
-            raise DictKeyError(key=e.args[0], dict_=dict_) from e
-
-        return cls(function=function_name, arguments=arguments)
+        # This is an abstract method that subclasses must override
+        raise NotImplementedError(f"{cls.__name__} must override from_dict")
 
 
 FunctionModelT = TypeVar("FunctionModelT", bound=FunctionModel)
